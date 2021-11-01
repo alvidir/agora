@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  zero:
+    image: dgraph/dgraph:latest
+    volumes:
+      - zero-data:/dgraph
+    ports:
+      - 5080:5080
+      - 6080:6080
+    networks:
+      - dgraph
+    restart: on-failure
+    command: dgraph zero --my=zero:5080
+
+  alpha:
+    image: dgraph/dgraph:latest
+    volumes:
+      - alpha-data:/dgraph
+    ports:
+      - 8080:8080
+      - 9080:9080
+    networks:
+      - dgraph
+    restart: on-failure
+    command: dgraph alpha --my=alpha:7080 --zero=zero:5080
+
+networks:
+    # dgraph network is the bridge between domain environment and dgraph service
+    dgraph:
+        name: dgraph
+        driver: bridge
+
+volumes:
+  zero-data:
+  alpha-data:
