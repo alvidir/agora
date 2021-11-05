@@ -1,29 +1,33 @@
-version: '3.8'
+version: '3.9'
 
 services:
   zero:
-    image: dgraph/dgraph:latest
+    container_name: zero
+    image: docker.io/dgraph/dgraph:latest
     volumes:
       - zero-data:/dgraph
-    ports:
-      - 5080:5080
-      - 6080:6080
     networks:
       - dgraph
     restart: on-failure
     command: dgraph zero --my=zero:5080
 
   alpha:
-    image: dgraph/dgraph:latest
+    container_name: alpha
+    image: docker.io/dgraph/dgraph:latest
     volumes:
       - alpha-data:/dgraph
-    ports:
-      - 8080:8080
-      - 9080:9080
     networks:
       - dgraph
     restart: on-failure
-    command: dgraph alpha --my=alpha:7080 --zero=zero:5080
+    command: dgraph alpha --security whitelist=ratel --my=alpha:7080 --zero=zero:5080 
+
+  ratel:
+    container_name: ratel
+    image: docker.io/dgraph/ratel:latest
+    ports:
+      - ${RATEL_PORT}:8000
+    networks:
+      - dgraph
 
 networks:
     # dgraph network is the bridge between domain environment and dgraph service

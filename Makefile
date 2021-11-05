@@ -17,3 +17,7 @@ run:
 
 test:
 	go test -v -race ./...
+
+migrate:
+	# pip3 install python-dotenv
+	python3 scripts/migrate_schema.py
