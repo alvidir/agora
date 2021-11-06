@@ -18,8 +18,10 @@ services:
       - alpha-data:/dgraph
     networks:
       - dgraph
+    ports:
+      - ${ALPHA_PORT}:8080
     restart: on-failure
-    command: dgraph alpha --security whitelist=ratel --my=alpha:7080 --zero=zero:5080 
+    command: dgraph alpha --security whitelist=10.0.2.100 --my=alpha:7080 --zero=zero:5080 
 
   ratel:
     container_name: ratel

@@ -1,5 +1,65 @@
 type Universe {
     id: ID!
-    name: String! @search(by: [hash, regexp])
-    userId: String! @search(by: [hash])
+    name: String! @id @search(by: [hash, regexp])
+    userId: String! @id @search(by: [hash])
+}
+
+type TraitKind {
+    name: String! @id @search(by: [hash, regexp])
+    mutable: Boolean!
+}
+
+type Trait {
+    kind: TraitKind!
+    value: String!
+    entity: Entity!
+    changes: [Change!] @hasInverse(field: changes)
+}
+
+type Moment {
+    id: ID!
+    before: Moment @hasInverse(field: after)
+    after: Moment @hasInverse(field: before)
+    happen: [Event!] @hasInverse(field: when)
+}
+
+type Tag {
+    name: String! @id @search(by: [hash, regexp])
+}
+
+type Event {
+    id: ID!
+    name: String! @id @search(by: [hash, regexp])
+    description: String @search(by: [term])
+    where: Location
+    when: Moment! 
+    who: [Character!] @hasInverse(field: involved)
+    cause: [Event!] @hasInverse(field: effect)
+    effect: [Event!] @hasInverse(field: cause)
+    tags: [Tag!]
+}
+
+interface Entity {
+    id: ID!
+    universe: Universe!
+    name: String! @id @search(by: [hash, regexp])
+    description: String @search(by: [term])
+    traits: [Trait!] @hasInverse(field: entity)
+    tags: [Tag!]
+}
+
+type Location implements Entity {
+    events: [Event!] @hasInverse(field: where)
+    latitude: Float
+    longitude: Float
+    z: Float
+}
+
+type Character implements Entity {
+    involved: [Event!] @hasInverse(field: who)
+}
+
+type Change {
+    cause: Event!
+    changes: [Trait!]! @hasInverse(field: changes)
 }
