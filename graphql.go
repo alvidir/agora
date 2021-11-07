@@ -3,13 +3,15 @@ package agora
 import (
 	"log"
 
+	"github.com/dgraph-io/dgo/v210"
+	"github.com/dgraph-io/dgo/v210/protos/api"
 	"google.golang.org/grpc"
 )
 
-func newClient() *dgo.Dgraph {
-	// Dial a gRPC connection. The address to dial to can be configured when
-	// setting up the dgraph cluster.
-	d, err := grpc.Dial("localhost:9080", grpc.WithInsecure())
+var DGraphURI = "localhost:9080"
+
+func NewConn() *dgo.Dgraph {
+	d, err := grpc.Dial(DGraphURI, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 	}

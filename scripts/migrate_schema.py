@@ -3,6 +3,7 @@
 import os
 import re
 import requests
+import sys
 
 from dotenv import load_dotenv
 load_dotenv() 
@@ -13,35 +14,47 @@ URL = os.getenv("DGRAPH_SCHEMA_URL")
 
 regex = re.compile(REGEX)
 
-print("Browsing for migration files...")
+def is_migration_files(filename) -> bool:
+    return regex.match(filename)
 
-scripts = []
-for root, dirs, files in os.walk(WORKDIR):
-    for file in files:
-        if regex.match(file):
-            path = os.path.join(root, file)
-            scripts.append(path)
+def main() -> int:
+    print("Browsing for migration files...")
 
-if not scripts:
-    print("No migration files has been found")
-    exit()
+    scripts = []
+    for root, _, files in os.walk(WORKDIR):
+        files = filter(is_migration_files, files)
+        
+        def make_absolute_path(filename) -> str:
+            return os.path.join(root, filename)
 
-query = ""
-for path in sorted(scripts):
-    print("-\t{}".format(path))
+        files = map(make_absolute_path, files)
+        scripts += list(files)
 
-    fo = open(path, "r")
-    query += "{}\n".format(fo.read())
-    fo.close()
+    if not scripts:
+        print("No migration files where found")
+        return 1
 
-print("Applying migrations at {}".format(URL))
-response = requests.post(URL, data=query, headers={
-    "Content-Type": "application/json"
-})
+    query = ""
+    for path in sorted(scripts):
+        print("-\t{}".format(path))
 
-data = response.json()
-if 'errors' in data:
-    print("Response: {}".format(data['errors']))
-    print("FAILED")
-else:
+        fo = open(path, "r")
+        query += "{}\n".format(fo.read())
+        fo.close()
+
+    print("Applying migrations at {}".format(URL))
+    response = requests.post(URL, data=query, headers={
+        "Content-Type": "application/json"
+    })
+
+    data = response.json()
+    if 'errors' in data:
+        print("Response: {}".format(data['errors']))
+        print("FAILED")
+        return 1
+    
     print("SUCCESS")
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

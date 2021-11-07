@@ -2,6 +2,7 @@ type Universe {
     id: ID!
     name: String! @id @search(by: [hash, regexp])
     userId: String! @id @search(by: [hash])
+    entities: [Entity!] @hasInverse(field: universe)
 }
 
 type TraitKind {
@@ -56,6 +57,8 @@ type Location implements Entity {
 }
 
 type Character implements Entity {
+    nickname: String
+    surnames: [String!]
     involved: [Event!] @hasInverse(field: who)
 }
 
