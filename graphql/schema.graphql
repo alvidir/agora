@@ -7,25 +7,33 @@ type Universe {
 
 type TraitKind {
     name: String! @id @search(by: [hash, regexp])
-    mutable: Boolean!
+    ocurrences: [Trait!] @hasInverse(field: kind)
 }
 
 type Trait {
-    kind: TraitKind!
-    value: String!
+    kind: Kind!
+    changes: [Change!] @hasInverse(field: trait)
     entity: Entity!
-    changes: [Change!] @hasInverse(field: changes)
+    value: String!
+}
+
+type Change {
+    trait: Trait!
+    value: String!
+    cause: Event!
 }
 
 type Moment {
     id: ID!
     before: Moment @hasInverse(field: after)
-    after: Moment @hasInverse(field: before)
+    after: Moment
     happen: [Event!] @hasInverse(field: when)
 }
 
 type Tag {
     name: String! @id @search(by: [hash, regexp])
+    events: [Event!] @hasInverse(field: tags)
+    entities: [Event!] @hasInverse(field: tags)
 }
 
 type Event {
@@ -33,11 +41,11 @@ type Event {
     name: String! @id @search(by: [hash, regexp])
     description: String @search(by: [term])
     where: Location
-    when: Moment! 
-    who: [Character!] @hasInverse(field: involved)
+    when: Moment!
+    who: [Character!]
     cause: [Event!] @hasInverse(field: effect)
-    effect: [Event!] @hasInverse(field: cause)
-    tags: [Tag!]
+    effect: [Event!]
+    tags: [Tag!] 
 }
 
 interface Entity {
@@ -57,12 +65,7 @@ type Location implements Entity {
 }
 
 type Character implements Entity {
-    nickname: String
-    surnames: [String!]
+    parents: [Character!] @hasInverse(field: children)
+    children: [Character!] @hasInverse(field: parents)
     involved: [Event!] @hasInverse(field: who)
-}
-
-type Change {
-    cause: Event!
-    changes: [Trait!]! @hasInverse(field: changes)
 }
