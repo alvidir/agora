@@ -1,22 +1,22 @@
 package agora
 
 import (
-	"log"
-
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
 	"google.golang.org/grpc"
 )
 
-var DGraphURI = "localhost:9080"
+type CloseFunc func() error
 
-func NewConn() *dgo.Dgraph {
-	d, err := grpc.Dial(DGraphURI, grpc.WithInsecure())
+func NewConn(uri string) (*dgo.Dgraph, CloseFunc, error) {
+	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
 
-	return dgo.NewDgraphClient(
-		api.NewDgraphClient(d),
+	client := dgo.NewDgraphClient(
+		api.NewDgraphClient(conn),
 	)
+
+	return client, conn.Close, nil
 }

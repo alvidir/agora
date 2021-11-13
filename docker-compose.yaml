@@ -19,7 +19,8 @@ services:
     networks:
       - dgraph
     ports:
-      - ${ALPHA_PORT}:8080
+      - 9080:9080
+      - 8080:8080
     restart: on-failure
     command: dgraph alpha --security whitelist=10.0.2.100 --my=alpha:7080 --zero=zero:5080 
 
@@ -27,7 +28,7 @@ services:
     container_name: ratel
     image: docker.io/dgraph/ratel:latest
     ports:
-      - ${RATEL_PORT}:8000
+      - 8000:8000
     networks:
       - dgraph
 
