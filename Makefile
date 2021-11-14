@@ -12,6 +12,9 @@ deploy:
 undeploy:
 	podman-compose -f docker-compose.yaml down
 
+purge: undeploy
+	podman volume rm --force agora_alpha-data agora_zero-data
+
 run:
 	go run cmd/agora/main.go
 
