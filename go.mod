@@ -3,7 +3,9 @@ module github.com/alvidir/agora
 go 1.17
 
 require (
+	github.com/alvidir/go-util v0.0.0-20210926100755-a255c12ab598
 	github.com/dgraph-io/dgo/v210 v210.0.0-20210825123656-d3f867fe9cc3
+	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.4.0
 	google.golang.org/grpc v1.42.0
 )
@@ -17,4 +19,5 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20211104193956-4c6863e31247 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

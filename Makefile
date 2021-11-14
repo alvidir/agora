@@ -15,6 +15,8 @@ undeploy:
 purge: undeploy
 	podman volume rm --force agora_alpha-data agora_zero-data
 
+reboot: purge deploy
+
 run:
 	go run cmd/agora/main.go
 

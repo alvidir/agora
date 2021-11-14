@@ -1,3 +1,9 @@
+type Universe {
+    id: ID!
+    name: String! @id @search(by: [hash, regexp])
+    user: String! @id @search(by: [hash, regexp])
+}
+
 # type Universe {
 #     id: ID!
 #     name: String! @id @search(by: [hash, regexp])
