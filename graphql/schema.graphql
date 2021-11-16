@@ -1,7 +1,9 @@
+name: string @index(exact, term) .
+user: string @index(trigram) .
+
 type Universe {
-    id: ID!
-    name: String! @id @search(by: [hash, regexp])
-    user: String! @id @search(by: [hash, regexp])
+    name
+    user
 }
 
 # type Universe {

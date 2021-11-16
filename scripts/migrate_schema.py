@@ -10,7 +10,7 @@ load_dotenv()
 
 WORKDIR = os.getenv("GRAPHQL_PATH")
 REGEX = os.getenv("GRAPHQL_FILE_REGEX")
-URL = os.getenv("DGRAPH_SCHEMA_URL")
+URL = os.getenv("DGRAPH_ALTER_URL")
 
 regex = re.compile(REGEX)
 
