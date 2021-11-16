@@ -5,8 +5,8 @@ go 1.17
 require (
 	github.com/alvidir/go-util v0.0.0-20210926100755-a255c12ab598
 	github.com/dgraph-io/dgo/v210 v210.0.0-20210825123656-d3f867fe9cc3
-	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.4.0
+	github.com/sirupsen/logrus v1.8.1
 	google.golang.org/grpc v1.42.0
 )
 

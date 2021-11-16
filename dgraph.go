@@ -1,37 +1,44 @@
 package agora
 
 import (
+	"context"
+
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
 	"google.golang.org/grpc"
 )
 
-// CloseFunc closes the connection, it's call should be deferred asap
-type CloseFunc func() error
-
-type DGraphClient interface {
-	Connect() (*dgo.Dgraph, CloseFunc, error)
+type Dgraph struct {
+	*grpc.ClientConn
+	*dgo.Dgraph
 }
 
-type dgraphClient struct {
-	uri string
+type Tx struct {
+	context.Context
+	*dgo.Txn
 }
 
-func NewDgraphClient(uri string) DGraphClient {
-	return &dgraphClient{
-		uri: uri,
-	}
-}
-
-func (dg *dgraphClient) Connect() (*dgo.Dgraph, CloseFunc, error) {
-	client, err := grpc.Dial(dg.uri, grpc.WithInsecure())
+func Open(uri string) (*Dgraph, error) {
+	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	dclient := dgo.NewDgraphClient(
-		api.NewDgraphClient(client),
+	dgraph := dgo.NewDgraphClient(
+		api.NewDgraphClient(conn),
 	)
 
-	return dclient, client.Close, nil
+	return &Dgraph{conn, dgraph}, nil
+}
+
+func (dg *Dgraph) Begin(ctx context.Context) *Tx {
+	return &Tx{ctx, dg.NewTxn()}
+}
+
+func (tx *Tx) Finish(err *error) {
+	if err == nil || *err == nil {
+		tx.Commit(tx)
+	} else {
+		tx.Discard(tx)
+	}
 }

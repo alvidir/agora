@@ -1,6 +1,11 @@
-package agora
+package universe
 
-import "testing"
+import (
+	"context"
+	"testing"
+
+	"github.com/alvidir/agora"
+)
 
 func TestDgraphUniverseRepositoryCreate(t *testing.T) {
 	wantUniverse := &Universe{
@@ -8,10 +13,14 @@ func TestDgraphUniverseRepositoryCreate(t *testing.T) {
 		User: "TestingUser",
 	}
 
-	client := NewDgraphClient(uri)
-	repo := &DgraphUniverseRepository{client}
+	client, err := agora.Open(uri)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	if err := repo.Create(wantUniverse); err != nil {
+	repo := &DgraphUniverseRepository{client}
+	ctx := context.Background()
+	if err := repo.Create(ctx, wantUniverse); err != nil {
 		t.Fatal(err)
 	}
 
@@ -19,7 +28,7 @@ func TestDgraphUniverseRepositoryCreate(t *testing.T) {
 		t.Fatalf("Got empty universe Id")
 	}
 
-	if gotUniverse, err := repo.Find(wantUniverse.Id); err != nil {
+	if gotUniverse, err := repo.Find(ctx, wantUniverse.Id); err != nil {
 		t.Fatal(err)
 	} else if gotUniverse.Id != wantUniverse.Id {
 		t.Fatalf("Got id = %s, want %s", gotUniverse.Id, wantUniverse.Id)
@@ -27,7 +36,7 @@ func TestDgraphUniverseRepositoryCreate(t *testing.T) {
 		t.Fatalf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
 	} else if gotUniverse.User != wantUniverse.User {
 		t.Fatalf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
-	} else if err := repo.Delete(gotUniverse); err != nil {
+	} else if err := repo.Delete(ctx, gotUniverse); err != nil {
 		t.Fatal(err)
 	}
 }
