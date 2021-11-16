@@ -10,9 +10,48 @@ import (
 	"github.com/dgraph-io/dgo/v210/protos/api"
 )
 
+const (
+	dgraphUniverseType = "Universe"
+	queryFindById      = `query universe($id: string) {
+		universe(func: uid($id)) {
+			uid
+			name
+			user
+		}
+	}`
+
+	queryFindByNameAndUser = `query universe($name: string, $user: string) {
+		universe(func: eq(name, $name) and eq(user, $user)) {
+			uid
+			name
+			user
+		}
+	}`
+)
+
 var (
 	ErrTransactionFailed = errors.New("transaction has failed")
 )
+
+type dgraphUniverse struct {
+	*Universe
+	DType []string `json:"dgraph.type,omitempty"`
+}
+
+type dgraphUniverseTuple struct {
+	Universe []dgraphUniverse `json:"universe"`
+}
+
+func modelToDgraph(universe *Universe) *dgraphUniverse {
+	return &dgraphUniverse{
+		Universe: universe,
+		DType:    []string{dgraphUniverseType},
+	}
+}
+
+func dgraphToModel(universe *dgraphUniverse) *Universe {
+	return universe.Universe
+}
 
 // DgraphUniverseRepository implements the UniverseRepository interface for Dgraph databases
 type DgraphUniverseRepository struct {
@@ -24,17 +63,8 @@ func (repo *DgraphUniverseRepository) Find(ctx context.Context, id string) (uni 
 	tx := repo.client.Begin(ctx)
 	defer tx.Finish(&err)
 
-	q := `query universe($id: string) {
-		universe(func: uid($id)) {
-			uid
-			name
-			user
-			dgraph.type
-		}
-	}`
-
 	req := &api.Request{
-		Query: q,
+		Query: queryFindById,
 		Vars:  map[string]string{"$id": id},
 	}
 
@@ -43,11 +73,7 @@ func (repo *DgraphUniverseRepository) Find(ctx context.Context, id string) (uni 
 		return
 	}
 
-	type tuple struct {
-		Universe []Universe `json:"universe"`
-	}
-
-	var result tuple
+	var result dgraphUniverseTuple
 	if err = json.Unmarshal(res.GetJson(), &result); err != nil {
 		return
 	}
@@ -56,7 +82,7 @@ func (repo *DgraphUniverseRepository) Find(ctx context.Context, id string) (uni 
 		return nil, util.ErrNotFound
 	}
 
-	return &result.Universe[0], nil
+	return dgraphToModel(&result.Universe[0]), nil
 }
 
 // FindByName provides the unique universe with the given name, if any
@@ -64,17 +90,12 @@ func (repo *DgraphUniverseRepository) FindByNameAndUser(ctx context.Context, nam
 	tx := repo.client.Begin(ctx)
 	defer tx.Finish(&err)
 
-	q := `query universe($name: string) {
-		universe(func: eq(name, $name)) {
-			uid
-			name
-			user
-		}
-	}`
-
 	req := &api.Request{
-		Query: q,
-		Vars:  map[string]string{"$name": name},
+		Query: queryFindByNameAndUser,
+		Vars: map[string]string{
+			"$name": name,
+			"$user": user,
+		},
 	}
 
 	res, err := tx.Do(ctx, req)
@@ -82,11 +103,7 @@ func (repo *DgraphUniverseRepository) FindByNameAndUser(ctx context.Context, nam
 		return
 	}
 
-	type tuple struct {
-		Universe []Universe `json:"universe"`
-	}
-
-	var result tuple
+	var result dgraphUniverseTuple
 	if err = json.Unmarshal(res.GetJson(), &result); err != nil {
 		return
 	}
@@ -95,7 +112,7 @@ func (repo *DgraphUniverseRepository) FindByNameAndUser(ctx context.Context, nam
 		return nil, util.ErrNotFound
 	}
 
-	return &result.Universe[0], nil
+	return dgraphToModel(&result.Universe[0]), nil
 }
 
 // Create persists the provided universe
@@ -103,7 +120,8 @@ func (repo *DgraphUniverseRepository) Create(ctx context.Context, universe *Univ
 	tx := repo.client.Begin(ctx)
 	defer tx.Finish(&err)
 
-	pb, err := json.Marshal(universe)
+	dgraphUniverse := modelToDgraph(universe)
+	pb, err := json.Marshal(dgraphUniverse)
 	if err != nil {
 		return
 	}
@@ -138,7 +156,8 @@ func (repo *DgraphUniverseRepository) Delete(ctx context.Context, universe *Univ
 	tx := repo.client.Begin(ctx)
 	defer tx.Finish(&err)
 
-	pb, err := json.Marshal(universe)
+	dgraphUniverse := modelToDgraph(universe)
+	pb, err := json.Marshal(dgraphUniverse)
 	if err != nil {
 		return
 	}
@@ -151,6 +170,10 @@ func (repo *DgraphUniverseRepository) Delete(ctx context.Context, universe *Univ
 		Mutations: []*api.Mutation{mu},
 	}
 
-	_, err = tx.Do(ctx, req)
+	if _, err = tx.Do(ctx, req); err != nil {
+		return
+	}
+
+	universe.Id = ""
 	return
 }
