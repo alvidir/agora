@@ -43,7 +43,7 @@ type dgraphUniverseTuple struct {
 	Universe []dgraphUniverse `json:"universe"`
 }
 
-func modelToDgraph(universe *Universe) *dgraphUniverse {
+func parseModel(universe *Universe) *dgraphUniverse {
 	return &dgraphUniverse{
 		Universe: universe,
 		Uid:      universe.Id,
@@ -51,7 +51,7 @@ func modelToDgraph(universe *Universe) *dgraphUniverse {
 	}
 }
 
-func dgraphToModel(universe *dgraphUniverse) *Universe {
+func (universe *dgraphUniverse) toModel() *Universe {
 	universe.Id = universe.Uid
 	return universe.Universe
 }
@@ -85,7 +85,7 @@ func (repo *DgraphUniverseRepository) Find(ctx context.Context, id string) (uni 
 		return nil, util.ErrNotFound
 	}
 
-	return dgraphToModel(&result.Universe[0]), nil
+	return result.Universe[0].toModel(), nil
 }
 
 // FindByName provides the unique universe with the given name, if any
@@ -115,7 +115,7 @@ func (repo *DgraphUniverseRepository) FindByNameAndUser(ctx context.Context, nam
 		return nil, util.ErrNotFound
 	}
 
-	return dgraphToModel(&result.Universe[0]), nil
+	return result.Universe[0].toModel(), nil
 }
 
 // Create persists the provided universe
@@ -123,7 +123,7 @@ func (repo *DgraphUniverseRepository) Create(ctx context.Context, universe *Univ
 	tx := repo.client.Begin(ctx)
 	defer tx.Finish(&err)
 
-	dgraphUniverse := modelToDgraph(universe)
+	dgraphUniverse := parseModel(universe)
 	pb, err := json.Marshal(dgraphUniverse)
 	if err != nil {
 		return
@@ -159,7 +159,7 @@ func (repo *DgraphUniverseRepository) Delete(ctx context.Context, universe *Univ
 	tx := repo.client.Begin(ctx)
 	defer tx.Finish(&err)
 
-	dgraphUniverse := modelToDgraph(universe)
+	dgraphUniverse := parseModel(universe)
 	pb, err := json.Marshal(dgraphUniverse)
 	if err != nil {
 		return
