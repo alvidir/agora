@@ -9,8 +9,8 @@ import (
 
 func TestDgraphUniverseRepositoryCreate(t *testing.T) {
 	wantUniverse := &Universe{
-		Name: "TestingUniverse",
-		User: "TestingUser",
+		Name: "TestDgraphUniverseRepositoryCreateName",
+		User: "TestDgraphUniverseRepositoryCreateUser",
 	}
 
 	client, err := agora.Open(uri)
