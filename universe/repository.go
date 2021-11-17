@@ -35,7 +35,6 @@ var (
 
 type dgraphUniverse struct {
 	*Universe
-	Uid   string   `json:"uid,omitempty"`
 	DType []string `json:"dgraph.type,omitempty"`
 }
 
@@ -46,13 +45,11 @@ type dgraphUniverseTuple struct {
 func parseModel(universe *Universe) *dgraphUniverse {
 	return &dgraphUniverse{
 		Universe: universe,
-		Uid:      universe.Id,
 		DType:    []string{dgraphUniverseType},
 	}
 }
 
 func (universe *dgraphUniverse) toModel() *Universe {
-	universe.Id = universe.Uid
 	return universe.Universe
 }
 
