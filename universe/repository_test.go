@@ -1,11 +1,27 @@
+//go:build integration
+// +build integration
+
 package universe
 
 import (
 	"context"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/alvidir/agora"
+	"github.com/joho/godotenv"
 )
+
+var uri string = "localhost:9080"
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
+
+	uri = os.Getenv("TEST_DGRAPH_URI")
+}
 
 func TestDgraphUniverseRepositoryCreate(t *testing.T) {
 	wantUniverse := &Universe{

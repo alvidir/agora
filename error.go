@@ -9,20 +9,36 @@ import (
 type HttpError struct {
 	Code    string `json:"error"`
 	Message string `json:"message"`
-	status  int
+	Status  int
 }
 
-func NewHttpError(status int, code, msg string) *HttpError {
-	return &HttpError{code, msg, status}
+// CatchError takes an error pointer and build an HttpError if, and only if, the pointer is not null and there is an actual error;
+// otherwise it returns nil
+func CatchError(err *error, callback func(error, *HttpError)) *HttpError {
+	if err == nil || *err == nil {
+		return nil
+	}
+
+	httperr := &HttpError{
+		Message: (*err).Error(),
+		Status:  http.StatusBadRequest,
+	}
+
+	if callback != nil {
+		callback(*err, httperr)
+	}
+
+	return httperr
 }
 
+// Send retrieves the current HttpError as an http response
 func (httperr *HttpError) Send(w http.ResponseWriter) (err error) {
 	response, err := json.Marshal(httperr)
 	if err != nil {
 		return
 	}
 
-	w.WriteHeader(httperr.status)
+	w.WriteHeader(httperr.Status)
 	_, err = w.Write(response)
 	return
 }
