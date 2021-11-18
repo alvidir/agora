@@ -21,7 +21,7 @@ run:
 	go run cmd/agora/main.go
 
 test:
-	go test -v -race ./...
+	go test -v -race ./... -tags=all
 
 migrate:
 	# pip3 install python-dotenv
