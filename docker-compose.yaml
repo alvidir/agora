@@ -16,11 +16,9 @@ services:
     image: docker.io/dgraph/dgraph:latest
     volumes:
       - alpha-data:/dgraph
-    networks:
-      - dgraph
     ports:
-      - 9080:9080
       - 8080:8080
+      - 9080:9080
     restart: on-failure
     command: dgraph alpha --security whitelist=10.0.2.100 --my=alpha:7080 --zero=zero:5080 
 

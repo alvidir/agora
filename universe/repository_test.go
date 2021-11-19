@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var uri string = "localhost:9080"
+var uri string = "localhost:8080"
 
 func init() {
 	if err := godotenv.Load(); err != nil {

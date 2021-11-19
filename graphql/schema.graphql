@@ -1,17 +1,9 @@
-name: string @index(exact, term) .
-user: string @index(trigram) .
-
 type Universe {
-    name
-    user
+    id: ID!
+    name: String! @search(by: [hash, regexp])
+    user: String! @search(by: [hash])
+    description: String
 }
-
-# type Universe {
-#     id: ID!
-#     name: String! @id @search(by: [hash, regexp])
-#     userId: String! @id @search(by: [hash])
-#     entities: [Entity!] @hasInverse(field: universe)
-# }
 
 # type TraitKind {
 #     name: String! @id @search(by: [hash, regexp])

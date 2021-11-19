@@ -43,9 +43,12 @@ def main() -> int:
         fo.close()
 
     print("Applying migrations at {}".format(URL))
-    response = requests.post(URL, data=query, headers={
-        "Content-Type": "application/json"
-    })
+    response = requests.post(URL,
+        data=query.encode(encoding='utf-8'),
+        headers={
+            "Content-Type": "application/json"
+        }
+    )
 
     data = response.json()
     if 'errors' in data:
