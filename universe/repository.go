@@ -12,7 +12,7 @@ var (
 	ErrTransactionFailed = errors.New("transaction has failed")
 )
 
-// graphqlUniverseRepository implements the UniverseRepository interface for Dgraph databases
+// graphqlUniverseRepository implements the UniverseRepository interface for Graphql endpoints
 type graphqlUniverseRepository struct {
 	graphql *graphql.Client
 }
