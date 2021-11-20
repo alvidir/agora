@@ -10,14 +10,7 @@ require (
 )
 
 require (
-	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/graphql-go/graphql v0.8.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4 // indirect
-	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 // indirect
-	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	golang.org/x/sys v0.0.0-20210423082822-04245dca01da // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

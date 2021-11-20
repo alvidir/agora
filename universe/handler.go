@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/alvidir/agora"
+	"github.com/alvidir/go-util"
 	"github.com/shurcooL/graphql"
 	"github.com/sirupsen/logrus"
 )
@@ -28,7 +28,7 @@ func (handler *UniverseHandler) logger() *logrus.Logger {
 	return handler.Logger
 }
 
-func (handler *UniverseHandler) errorsHandler(err error, httperr *agora.HttpError) {
+func (handler *UniverseHandler) errorsHandler(err error, httperr *util.HttpError) {
 	if errors.Is(err, ErrNameAlreadyExists) {
 		httperr.Code = ErrNameAlreadyExistsCode
 	}
@@ -55,7 +55,7 @@ func (handler *UniverseHandler) UniverseCreateHandler(w http.ResponseWriter, r *
 	app := &Application{repo}
 
 	universe, err := app.UniverseCreate(r.Context(), payload.Name, payload.User)
-	if httperr := agora.CatchError(&err, handler.errorsHandler); httperr != nil {
+	if httperr := util.CatchError(&err, handler.errorsHandler); httperr != nil {
 		if err := httperr.Send(w); err != nil {
 			handler.logger().Error(err)
 		}

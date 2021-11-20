@@ -2,14 +2,10 @@ package universe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"github.com/alvidir/go-util"
 	"github.com/shurcooL/graphql"
-)
-
-var (
-	ErrTransactionFailed = errors.New("transaction has failed")
 )
 
 // graphqlUniverseRepository implements the UniverseRepository interface for Graphql endpoints
@@ -35,38 +31,26 @@ func (repo *graphqlUniverseRepository) Find(ctx context.Context, id string) (uni
 }
 
 // FindByName provides the unique universe with the given name, if any
-// func (repo *graphqlUniverseRepository) FindByNameAndUser(ctx context.Context, name string, user string) (uni *Universe, err error) {
-// 	tx := repo.dgraph.Begin(ctx)
-// 	defer tx.Finish(&err)
+func (repo *graphqlUniverseRepository) FindByNameAndUser(ctx context.Context, name string, user string) (*Universe, error) {
+	var query struct {
+		Universe []Universe `graphql:"queryUniverse(filter: {name: { eq: $name }, user: { eq: $user }})"`
+	}
 
-// 	req := &api.Request{
-// 		Query: queryFindByNameAndUser,
-// 		Vars: map[string]string{
-// 			"$name": name,
-// 			"$user": user,
-// 		},
-// 	}
+	variables := map[string]interface{}{
+		"name": name,
+		"user": user,
+	}
 
-// 	res, err := tx.Do(ctx, req)
-// 	if err != nil {
-// 		return
-// 	}
+	if err := repo.graphql.Query(ctx, &query, variables); err != nil {
+		return nil, err
+	}
 
-// 	type graphqlUniverseTuple struct {
-// 		Universes []graphqlUniverse `json:"queryUniverse"`
-// 	}
+	if len(query.Universe) == 0 {
+		return nil, util.ErrNotFound
+	}
 
-// 	var result graphqlUniverseTuple
-// 	if err = json.Unmarshal(res.GetJson(), &result); err != nil {
-// 		return
-// 	}
-
-// 	if len(result.Universes) != 1 {
-// 		return nil, util.ErrNotFound
-// 	}
-
-// 	return result.Universes[0].toModel(), nil
-// }
+	return &query.Universe[0], nil
+}
 
 // Create persists the provided universe
 func (repo *graphqlUniverseRepository) Create(ctx context.Context, universe *Universe) (err error) {
@@ -102,7 +86,7 @@ func (repo *graphqlUniverseRepository) Create(ctx context.Context, universe *Uni
 	}
 
 	if len(mutation.AddUniverse.Universe) == 0 {
-		return ErrTransactionFailed
+		return util.ErrUnknownError
 	}
 
 	universe.Id = mutation.AddUniverse.Universe[0].Id
