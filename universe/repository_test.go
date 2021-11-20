@@ -9,32 +9,28 @@ import (
 	"os"
 	"testing"
 
-	"github.com/alvidir/agora"
 	"github.com/joho/godotenv"
+	"github.com/shurcooL/graphql"
 )
 
-var uri string = "localhost:8080"
+var graphqlUri string = "http://localhost:8080/graphql"
 
 func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal(err)
 	}
 
-	uri = os.Getenv("TEST_DGRAPH_URI")
+	graphqlUri = os.Getenv("TEST_GRAPHQL_URI")
 }
 
-func TestDgraphUniverseRepositoryCreate(t *testing.T) {
+func TestDgraphUniverseRepository(t *testing.T) {
 	wantUniverse := &Universe{
-		Name: "TestDgraphUniverseRepositoryCreateName",
-		User: "TestDgraphUniverseRepositoryCreateUser",
+		Name: "TestDgraphUniverseRepositoryName",
+		User: "TestDgraphUniverseRepositoryUser",
 	}
 
-	client, err := agora.Open(uri)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	repo := &DgraphUniverseRepository{client}
+	graphql := graphql.NewClient(graphqlUri, nil)
+	repo := &graphqlUniverseRepository{graphql}
 	ctx := context.Background()
 	if err := repo.Create(ctx, wantUniverse); err != nil {
 		t.Fatal(err)
@@ -47,7 +43,7 @@ func TestDgraphUniverseRepositoryCreate(t *testing.T) {
 	if gotUniverse, err := repo.Find(ctx, wantUniverse.Id); err != nil {
 		t.Fatal(err)
 	} else if gotUniverse.Id != wantUniverse.Id {
-		t.Fatalf("Got id = %s, want %s", gotUniverse.Id, wantUniverse.Id)
+		t.Fatalf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
 	} else if gotUniverse.Name != wantUniverse.Name {
 		t.Fatalf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
 	} else if gotUniverse.User != wantUniverse.User {

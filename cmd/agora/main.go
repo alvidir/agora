@@ -14,7 +14,7 @@ import (
 const (
 	EnvServiceNetw = "SERVICE_NETW"
 	EnvServiceAddr = "SERVICE_ADDR"
-	DgraphUriKey   = "DGRAPH_URI"
+	GraphqlUriKey  = "GRAPHQL_URI"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 		log.Printf("no dotenv file has been found")
 	}
 
-	uri, err := util.LookupEnv(DgraphUriKey)
+	graphqlUri, err := util.LookupEnv(GraphqlUriKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,8 +44,8 @@ func main() {
 
 	logger := logrus.New()
 	universeHandler := &universe.UniverseHandler{
-		Uri:    uri,
-		Logger: logger,
+		GraphqlUri: graphqlUri,
+		Logger:     logger,
 	}
 
 	http.HandleFunc("/", universeHandler.UniverseCreateHandler)

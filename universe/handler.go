@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/alvidir/agora"
+	"github.com/shurcooL/graphql"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,8 +16,8 @@ const (
 )
 
 type UniverseHandler struct {
-	Uri    string
-	Logger *logrus.Logger
+	GraphqlUri string
+	Logger     *logrus.Logger
 }
 
 func (handler *UniverseHandler) logger() *logrus.Logger {
@@ -33,6 +34,7 @@ func (handler *UniverseHandler) errorsHandler(err error, httperr *agora.HttpErro
 	}
 }
 
+// UniverseCreateHandler handles all request for universe creation
 func (handler *UniverseHandler) UniverseCreateHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -48,14 +50,8 @@ func (handler *UniverseHandler) UniverseCreateHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	dgraph, err := agora.Open(handler.Uri)
-	if err != nil {
-		handler.logger().Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	repo := &DgraphUniverseRepository{dgraph}
+	graphql := graphql.NewClient(handler.GraphqlUri, nil)
+	repo := &graphqlUniverseRepository{graphql}
 	app := &Application{repo}
 
 	universe, err := app.UniverseCreate(r.Context(), payload.Name, payload.User)
