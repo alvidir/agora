@@ -54,31 +54,15 @@ func (repo *graphqlUniverseRepository) FindByNameAndUser(ctx context.Context, na
 
 // Create persists the provided universe
 func (repo *graphqlUniverseRepository) Create(ctx context.Context, universe *Universe) (err error) {
-	type AddUniverseInput struct {
-		Name        string `json:"name,omitempty"`
-		User        string `json:"user,omitempty"`
-		Description string `json:"description,omitempty"`
-	}
-
-	type UniverseInputPayload struct {
-		Id          string `json:"id,omitempty"`
-		Name        string `json:"name,omitempty"`
-		User        string `json:"user,omitempty"`
-		Description string `json:"description,omitempty"`
-	}
-
 	var mutation struct {
 		AddUniverse struct {
-			Universe []UniverseInputPayload
+			Universe []Universe
 		} `graphql:"addUniverse(input: [$universe])"`
 	}
 
+	type AddUniverseInput Universe
 	variables := map[string]interface{}{
-		"universe": AddUniverseInput{
-			Name:        universe.Name,
-			User:        universe.User,
-			Description: universe.Description,
-		},
+		"universe": AddUniverseInput(*universe),
 	}
 
 	if err = repo.graphql.Mutate(ctx, &mutation, variables); err != nil {
