@@ -37,8 +37,8 @@ func (repo *graphqlUniverseRepository) FindByNameAndUser(ctx context.Context, na
 	}
 
 	variables := map[string]interface{}{
-		"name": name,
-		"user": user,
+		"name": graphql.String(name),
+		"user": graphql.String(user),
 	}
 
 	if err := repo.graphql.Query(ctx, &query, variables); err != nil {
