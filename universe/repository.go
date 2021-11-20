@@ -112,7 +112,7 @@ func (repo *graphqlUniverseRepository) Delete(ctx context.Context, universe *Uni
 	}
 
 	if mutation.DeleteUniverse.NumUids == 0 {
-		return fmt.Errorf("%w: %s", ErrTransactionFailed, mutation.DeleteUniverse.Msg)
+		return fmt.Errorf("%w: %s", util.ErrUnknownError, mutation.DeleteUniverse.Msg)
 	}
 
 	universe.Id = ""

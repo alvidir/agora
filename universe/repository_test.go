@@ -40,7 +40,7 @@ func TestDgraphUniverseRepository(t *testing.T) {
 		t.Fatalf("Got empty universe Id")
 	}
 
-	if gotUniverse, err := repo.FindByNameAndUser(ctx, wantUniverse.Name, wantUniverse.User); err != nil {
+	if gotUniverse, err := repo.Find(ctx, wantUniverse.Id); err != nil {
 		t.Fatal(err)
 	} else if gotUniverse.Id != wantUniverse.Id {
 		t.Fatalf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
