@@ -5,9 +5,11 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/alvidir/agora/universe"
+	"github.com/alvidir/agora"
 	"github.com/alvidir/go-util"
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/shurcooL/graphql"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,6 +18,28 @@ const (
 	EnvServiceAddr = "SERVICE_ADDR"
 	GraphqlUriKey  = "GRAPHQL_URI"
 )
+
+var WriteOnly = []string{"POST", "PUT", "DELETE"}
+
+func setUniverseRouter(r *mux.Router, client *graphql.Client, logger *logrus.Logger) *mux.Router {
+	repo := &agora.GraphqlUniverseRepository{
+		Graphql: client,
+	}
+
+	handler := agora.NewUniverseHandler(repo, logger)
+	r.Handle("/universe", handler).Methods(WriteOnly...)
+	return r
+}
+
+func setMomentRouter(r *mux.Router, client *graphql.Client, logger *logrus.Logger) *mux.Router {
+	repo := &agora.GraphqlMomentRepository{
+		Graphql: client,
+	}
+
+	handler := agora.NewMomentHandler(repo, logger)
+	r.Handle("/moment", handler).Methods(WriteOnly...)
+	return r
+}
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -43,14 +67,14 @@ func main() {
 	}
 
 	logger := logrus.New()
-	universeHandler := &universe.UniverseHandler{
-		GraphqlUri: graphqlUri,
-		Logger:     logger,
-	}
+	graphql := graphql.NewClient(graphqlUri, nil)
+	router := mux.NewRouter()
 
-	http.HandleFunc("/", universeHandler.UniverseCreateHandler)
+	setUniverseRouter(router, graphql, logger)
+	setMomentRouter(router, graphql, logger)
+
 	logger.WithField("address", address).Info("server ready to accept connections")
-	if err := http.Serve(lis, nil); err != nil {
+	if err := http.Serve(lis, router); err != nil {
 		log.Fatalf("server abruptly terminated: %s", err.Error())
 	}
 }

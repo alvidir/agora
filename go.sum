@@ -1,9 +1,9 @@
-github.com/alvidir/go-util v0.0.0-20210926100755-a255c12ab598 h1:hT0SO7ca6cauxrKluPitCYA8aEoggZhQDLL7Vc/144o=
-github.com/alvidir/go-util v0.0.0-20210926100755-a255c12ab598/go.mod h1:i2dRSQot7kzC4TZF/fEgNthOrGsGwRGjU8+61Z0WcR0=
-github.com/alvidir/go-util v0.0.0-20211120114623-4301324e0799 h1:z8iNoVyruIsMl1Zm8XdNBrCRCqC9Pm+Wvonvwysb6p0=
-github.com/alvidir/go-util v0.0.0-20211120114623-4301324e0799/go.mod h1:i2dRSQot7kzC4TZF/fEgNthOrGsGwRGjU8+61Z0WcR0=
+github.com/alvidir/go-util v0.0.0-20211122100850-97ca75e4828c h1:wK5tVqfB6wCBRsvCbTaU8Mg6a6e3QRy5v9rlXSxs8K4=
+github.com/alvidir/go-util v0.0.0-20211122100850-97ca75e4828c/go.mod h1:i2dRSQot7kzC4TZF/fEgNthOrGsGwRGjU8+61Z0WcR0=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/joho/godotenv v1.4.0 h1:3l4+N6zfMWnkbPEXKng2o2/MR5mSwTrBih4ZEkkz1lg=
 github.com/joho/godotenv v1.4.0/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
@@ -18,7 +18,6 @@ golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4 h1:DZshvxDdVoeKIbudAdFEKi+f7
 golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20210423082822-04245dca01da h1:b3NXsE2LusjYGGjL5bxEVZZORm/YEFFrWFjR8eFrw/c=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 h1:kwrAHlwJ0DUBZwQ238v+Uod/3eZ8B2K5rYsUHBQvzmI=
 golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

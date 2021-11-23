@@ -1,27 +1,14 @@
 //go:build all || integration
 // +build all integration
 
-package universe
+package agora
 
 import (
 	"context"
-	"log"
-	"os"
 	"testing"
 
-	"github.com/joho/godotenv"
 	"github.com/shurcooL/graphql"
 )
-
-var graphqlUri string = "http://localhost:8080/graphql"
-
-func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
-	}
-
-	graphqlUri = os.Getenv("TEST_GRAPHQL_URI")
-}
 
 func TestDgraphUniverseRepositoryFind(t *testing.T) {
 	wantUniverse := &Universe{
@@ -31,11 +18,17 @@ func TestDgraphUniverseRepositoryFind(t *testing.T) {
 	}
 
 	graphql := graphql.NewClient(graphqlUri, nil)
-	repo := &graphqlUniverseRepository{graphql}
+	repo := &GraphqlUniverseRepository{graphql}
 	ctx := context.Background()
-	if err := repo.Create(ctx, wantUniverse); err != nil {
+	if err := repo.Insert(ctx, wantUniverse); err != nil {
 		t.Fatal(err)
 	}
+
+	defer func(u *Universe) {
+		if err := repo.Delete(ctx, u); err != nil {
+			t.Fatal(err)
+		}
+	}(wantUniverse)
 
 	if len(wantUniverse.Id) == 0 {
 		t.Fatalf("Got empty universe Id")
@@ -51,8 +44,6 @@ func TestDgraphUniverseRepositoryFind(t *testing.T) {
 		t.Fatalf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
 	} else if gotUniverse.Description != wantUniverse.Description {
 		t.Fatalf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
-	} else if err := repo.Delete(ctx, gotUniverse); err != nil {
-		t.Fatal(err)
 	}
 }
 
@@ -64,11 +55,17 @@ func TestDgraphUniverseRepositoryFindByNameAndUser(t *testing.T) {
 	}
 
 	graphql := graphql.NewClient(graphqlUri, nil)
-	repo := &graphqlUniverseRepository{graphql}
+	repo := &GraphqlUniverseRepository{graphql}
 	ctx := context.Background()
-	if err := repo.Create(ctx, wantUniverse); err != nil {
+	if err := repo.Insert(ctx, wantUniverse); err != nil {
 		t.Fatal(err)
 	}
+
+	defer func(u *Universe) {
+		if err := repo.Delete(ctx, u); err != nil {
+			t.Fatal(err)
+		}
+	}(wantUniverse)
 
 	if len(wantUniverse.Id) == 0 {
 		t.Fatalf("Got empty universe Id")
@@ -84,7 +81,50 @@ func TestDgraphUniverseRepositoryFindByNameAndUser(t *testing.T) {
 		t.Fatalf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
 	} else if gotUniverse.Description != wantUniverse.Description {
 		t.Fatalf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
-	} else if err := repo.Delete(ctx, gotUniverse); err != nil {
+	}
+}
+
+func TestDgraphUniverseRepositoryUpdate(t *testing.T) {
+	wantUniverse := &Universe{
+		Name:        "TestDgraphUniverseRepositoryUpdate_name_before",
+		User:        "TestDgraphUniverseRepositoryUpdate_user_before",
+		Description: "TestDgraphUniverseRepositoryUpdate_description_before",
+	}
+
+	graphql := graphql.NewClient(graphqlUri, nil)
+	repo := &GraphqlUniverseRepository{graphql}
+	ctx := context.Background()
+	if err := repo.Insert(ctx, wantUniverse); err != nil {
 		t.Fatal(err)
+	}
+
+	defer func(u *Universe) {
+		if err := repo.Delete(ctx, u); err != nil {
+			t.Fatal(err)
+		}
+	}(wantUniverse)
+
+	if len(wantUniverse.Id) == 0 {
+		t.Fatalf("Got empty universe Id")
+	}
+
+	wantUniverse.Name = "TestDgraphUniverseRepositoryUpdate_name_after"
+	wantUniverse.User = "TestDgraphUniverseRepositoryUpdate_user_after"
+	wantUniverse.Description = "TestDgraphUniverseRepositoryUpdate_description_after"
+
+	if err := repo.Update(ctx, wantUniverse); err != nil {
+		t.Fatal(err)
+	}
+
+	if gotUniverse, err := repo.Find(ctx, wantUniverse.Id); err != nil {
+		t.Fatal(err)
+	} else if gotUniverse.Id != wantUniverse.Id {
+		t.Fatalf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
+	} else if gotUniverse.Name != wantUniverse.Name {
+		t.Fatalf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
+	} else if gotUniverse.User != wantUniverse.User {
+		t.Fatalf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
+	} else if gotUniverse.Description != wantUniverse.Description {
+		t.Fatalf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
 	}
 }

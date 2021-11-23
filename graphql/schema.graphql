@@ -2,70 +2,71 @@ type Universe {
     id: ID!
     name: String! @search(by: [hash, regexp])
     user: String! @search(by: [hash])
-    description: String
+    description: String # a brief description of the universe itself
+    moments: [Moment!] @hasInverse(field: universe)
 }
 
-# type TraitKind {
-#     name: String! @id @search(by: [hash, regexp])
-#     ocurrences: [Trait!] @hasInverse(field: kind)
-# }
-
-# type Trait {
-#     kind: Kind!
-#     changes: [Change!] @hasInverse(field: trait)
-#     entity: Entity!
-#     value: String!
-# }
-
-# type Change {
-#     trait: Trait!
-#     value: String!
-#     cause: Event!
-# }
-
-# type Moment {
-#     id: ID!
-#     before: Moment @hasInverse(field: after)
-#     after: Moment
-#     happen: [Event!] @hasInverse(field: when)
-# }
-
-# type Tag {
-#     name: String! @id @search(by: [hash, regexp])
-#     events: [Event!] @hasInverse(field: tags)
-#     entities: [Event!] @hasInverse(field: tags)
-# }
+type Moment {
+    id: ID!
+    universe: Universe!
+    date: String @search(by: [term])
+    # happens: [Event!]! @hasInverse(field: when)
+    before: Moment @hasInverse(field: after)
+    after: Moment
+}
 
 # type Event {
 #     id: ID!
-#     name: String! @id @search(by: [hash, regexp])
-#     description: String @search(by: [term])
-#     where: Location
+#     name: String! @search(by: [hash, regexp])
+#     description: String @search(by: [term]) # a detailed description of the event
+#     related: [Event!]! @hasInverse(field: related)
 #     when: Moment!
-#     who: [Character!]
-#     cause: [Event!] @hasInverse(field: effect)
-#     effect: [Event!]
-#     tags: [Tag!] 
+#     where: Location
+#     who: [Character!]!
+# }
+
+# type Trait {
+#     name: String! @search(by: [hash, regexp])
+#     values: [String!]! @search(by: [term])
+#     owner: Entity!
 # }
 
 # interface Entity {
 #     id: ID!
 #     universe: Universe!
-#     name: String! @id @search(by: [hash, regexp])
+#     name: String! @search(by: [hash, regexp])
 #     description: String @search(by: [term])
-#     traits: [Trait!] @hasInverse(field: entity)
-#     tags: [Tag!]
+#     traits: [Trait!]! @hasInverse(field: owner)
 # }
 
 # type Location implements Entity {
-#     events: [Event!] @hasInverse(field: where)
+#     events: [Event!]! @hasInverse(field: where)
+#     belongs: Location
 #     latitude: Float
 #     longitude: Float
 #     z: Float
 # }
 
 # type Character implements Entity {
-#     parents: [Character!] @hasInverse(field: children)
-#     children: [Character!] @hasInverse(field: parents)
-#     involved: [Event!] @hasInverse(field: who)
+#     parents: [Character!]!
+#     involved: [Event!]! @hasInverse(field: who)
+# }
+
+# type Change {
+#     description: String @search(by: [term])
+#     was: Entity!
+#     becomes: Entity!
+#     cause: Event!
+# }
+
+# struct Direction {
+#     UNIDIRECTIONAL,
+#     BIDIRECTIONAL,
+# }
+
+# type Relation {
+#     name: String! @search(by: [hash, regexp])
+#     description: String @search(by: [term])
+#     from: [Character!]!
+#     to: [Character!]!
 # }
