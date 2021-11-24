@@ -14,10 +14,12 @@ type Handler interface {
 	UserID(*http.Request) (string, error)
 }
 
+// HandlerImplementation is a mock implementation for the Handler iterface
 type HandlerImplementation struct {
 	UserIdFunc func(*http.Request) (string, error)
 }
 
+// UserID is supposed to provide the user ID of the one performing the request
 func (handler *HandlerImplementation) UserID(r *http.Request) (string, error) {
 	return handler.UserIdFunc(r)
 }
