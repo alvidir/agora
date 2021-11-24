@@ -2,6 +2,7 @@ package agora
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/alvidir/go-util"
@@ -140,4 +141,17 @@ func (repo *GraphqlUniverseRepository) Delete(ctx context.Context, universe *Uni
 // GraphqlMomentRepository implements the MomentRepository interface for Graphql endpoints
 type GraphqlMomentRepository struct {
 	Graphql *graphql.Client
+}
+
+// A MomentRepository represents the persistency gateway for any Universe
+type MomentRepository interface {
+}
+
+// MomentApplication implements all available transactions for any Moment
+type MomentApplication struct {
+	repo MomentRepository
+}
+
+func (app *MomentApplication) TxCreateMoment(ctx context.Context, before string, after string) (*Moment, error) {
+	return nil, errors.New("not implemented")
 }

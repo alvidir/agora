@@ -5,10 +5,23 @@ package agora
 
 import (
 	"context"
+	"log"
+	"os"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/shurcooL/graphql"
 )
+
+var graphqlUri string = "http://localhost:8080/graphql"
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
+
+	graphqlUri = os.Getenv("GRAPHQL_URI")
+}
 
 func TestDgraphUniverseRepositoryFind(t *testing.T) {
 	wantUniverse := &Universe{
@@ -37,13 +50,13 @@ func TestDgraphUniverseRepositoryFind(t *testing.T) {
 	if gotUniverse, err := repo.Find(ctx, wantUniverse.Id); err != nil {
 		t.Fatal(err)
 	} else if gotUniverse.Id != wantUniverse.Id {
-		t.Fatalf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
+		t.Errorf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
 	} else if gotUniverse.Name != wantUniverse.Name {
-		t.Fatalf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
+		t.Errorf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
 	} else if gotUniverse.User != wantUniverse.User {
-		t.Fatalf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
+		t.Errorf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
 	} else if gotUniverse.Description != wantUniverse.Description {
-		t.Fatalf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
+		t.Errorf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
 	}
 }
 
@@ -74,13 +87,13 @@ func TestDgraphUniverseRepositoryFindByNameAndUser(t *testing.T) {
 	if gotUniverse, err := repo.FindByNameAndUser(ctx, wantUniverse.Name, wantUniverse.User); err != nil {
 		t.Fatal(err)
 	} else if gotUniverse.Id != wantUniverse.Id {
-		t.Fatalf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
+		t.Errorf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
 	} else if gotUniverse.Name != wantUniverse.Name {
-		t.Fatalf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
+		t.Errorf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
 	} else if gotUniverse.User != wantUniverse.User {
-		t.Fatalf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
+		t.Errorf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
 	} else if gotUniverse.Description != wantUniverse.Description {
-		t.Fatalf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
+		t.Errorf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
 	}
 }
 
@@ -119,12 +132,12 @@ func TestDgraphUniverseRepositoryUpdate(t *testing.T) {
 	if gotUniverse, err := repo.Find(ctx, wantUniverse.Id); err != nil {
 		t.Fatal(err)
 	} else if gotUniverse.Id != wantUniverse.Id {
-		t.Fatalf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
+		t.Errorf("Got id = %v, want %v", gotUniverse.Id, wantUniverse.Id)
 	} else if gotUniverse.Name != wantUniverse.Name {
-		t.Fatalf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
+		t.Errorf("Got name = %s, want %s", gotUniverse.Name, wantUniverse.Name)
 	} else if gotUniverse.User != wantUniverse.User {
-		t.Fatalf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
+		t.Errorf("Got user = %s, want %s", gotUniverse.User, wantUniverse.User)
 	} else if gotUniverse.Description != wantUniverse.Description {
-		t.Fatalf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
+		t.Errorf("Got description = %s, want %s", gotUniverse.Description, wantUniverse.Description)
 	}
 }

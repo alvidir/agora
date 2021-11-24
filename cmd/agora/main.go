@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -16,28 +17,27 @@ import (
 const (
 	EnvServiceNetw = "SERVICE_NETW"
 	EnvServiceAddr = "SERVICE_ADDR"
-	GraphqlUriKey  = "GRAPHQL_URI"
+	EnvGraphqlUri  = "GRAPHQL_URI"
+	EnvAuthHeader  = "AUTH_HEADER"
 )
 
-var WriteOnly = []string{"POST", "PUT", "DELETE"}
-
-func setUniverseRouter(r *mux.Router, client *graphql.Client, logger *logrus.Logger) *mux.Router {
+func setUniverseRouter(r *mux.Router, handler agora.Handler, client *graphql.Client, logger *logrus.Logger) *mux.Router {
 	repo := &agora.GraphqlUniverseRepository{
 		Graphql: client,
 	}
 
-	handler := agora.NewUniverseHandler(repo, logger)
-	r.Handle("/universe", handler).Methods(WriteOnly...)
+	h := agora.NewUniverseHandler(handler, repo, logger)
+	r.HandleFunc("/universe/create", h.CreateUniverse).Methods("POST")
 	return r
 }
 
-func setMomentRouter(r *mux.Router, client *graphql.Client, logger *logrus.Logger) *mux.Router {
+func setMomentRouter(r *mux.Router, handler agora.Handler, client *graphql.Client, logger *logrus.Logger) *mux.Router {
 	repo := &agora.GraphqlMomentRepository{
 		Graphql: client,
 	}
 
-	handler := agora.NewMomentHandler(repo, logger)
-	r.Handle("/moment", handler).Methods(WriteOnly...)
+	h := agora.NewMomentHandler(handler, repo, logger)
+	r.HandleFunc("/moment/create", h.CreateMoment).Methods("POST")
 	return r
 }
 
@@ -46,7 +46,7 @@ func main() {
 		log.Printf("no dotenv file has been found")
 	}
 
-	graphqlUri, err := util.LookupEnv(GraphqlUriKey)
+	graphqlUri, err := util.LookupEnv(EnvGraphqlUri)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,8 +70,23 @@ func main() {
 	graphql := graphql.NewClient(graphqlUri, nil)
 	router := mux.NewRouter()
 
-	setUniverseRouter(router, graphql, logger)
-	setMomentRouter(router, graphql, logger)
+	auth, err := util.LookupEnv(EnvAuthHeader)
+	if err != nil {
+		log.Fatalf("%s: %s", EnvAuthHeader, err)
+	}
+
+	handler := &agora.HandlerImplementation{
+		UserIdFunc: func(r *http.Request) (string, error) {
+			if values := r.Header[auth]; len(values) == 0 {
+				return "", errors.New("unauthorized")
+			} else {
+				return values[0], nil
+			}
+		},
+	}
+
+	setUniverseRouter(router, handler, graphql, logger)
+	setMomentRouter(router, handler, graphql, logger)
 
 	logger.WithField("address", address).Info("server ready to accept connections")
 	if err := http.Serve(lis, router); err != nil {

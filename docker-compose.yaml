@@ -16,18 +16,34 @@ services:
     image: docker.io/dgraph/dgraph:latest
     volumes:
       - alpha-data:/dgraph
+    networks:
+      - dgraph
     ports:
       - 8080:8080
     restart: on-failure
-    command: dgraph alpha --security whitelist=10.0.2.100 --my=alpha:7080 --zero=zero:5080 
+    command: dgraph alpha --security whitelist=10.0.2.100 --my=alpha:7080 --zero=zero:5080
 
-  ratel:
-    container_name: ratel
-    image: docker.io/dgraph/ratel:latest
-    ports:
-      - 8000:8000
+  # agora:
+  #   container_name: agora-server
+  #   image: localhost/alvidir/agora:0.1.0
+  #   networks:
+  #     - dgraph
+  #   ports:
+  #     - 8000:8000
+  #   env_file:
+  #     - ".env"
+
+  dev:
+    container_name: dev
+    image: docker.io/golang:latest
+    volumes:
+      - ./:/app
     networks:
       - dgraph
+    ports:
+      - 8000:8000
+    restart: on-failure
+    command: sleep 9999
 
 networks:
     # dgraph network is the bridge between domain environment and dgraph service

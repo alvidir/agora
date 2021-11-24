@@ -7,7 +7,6 @@ build:
 
 deploy:
 	podman-compose -f docker-compose.yaml up --remove-orphans -d
-	# delete -d in order to see output logs
 
 undeploy:
 	podman-compose -f docker-compose.yaml down

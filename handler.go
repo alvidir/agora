@@ -9,26 +9,41 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Handler represents the core of any agora's handler
+type Handler interface {
+	UserID(*http.Request) (string, error)
+}
+
+type HandlerImplementation struct {
+	UserIdFunc func(*http.Request) (string, error)
+}
+
+func (handler *HandlerImplementation) UserID(r *http.Request) (string, error) {
+	return handler.UserIdFunc(r)
+}
+
 // UniverseHandler manages all these requets related with the Universe model
 type UniverseHandler struct {
+	Handler
 	app    *UniverseApplication
 	logger *logrus.Logger
 }
 
 // NewUniverseHandler builds a UniverseHandler instance
-func NewUniverseHandler(repo UniverseRepository, logger *logrus.Logger) *UniverseHandler {
+func NewUniverseHandler(handler Handler, repo UniverseRepository, logger *logrus.Logger) *UniverseHandler {
 	app := &UniverseApplication{
 		repo: repo,
 	}
 
 	return &UniverseHandler{
-		app:    app,
-		logger: logger,
+		Handler: handler,
+		app:     app,
+		logger:  logger,
 	}
 }
 
-// ServeHTTP handles requests about Universe
-func (handler *UniverseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// CreateUniverse manages the creation request for a Universe
+func (handler *UniverseHandler) CreateUniverse(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		handler.logger.Warn(err)
@@ -43,7 +58,14 @@ func (handler *UniverseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	universe, err := handler.app.UniverseCreate(r.Context(), payload.Name, payload.User)
+	userId, err := handler.UserID(r)
+	if err != nil {
+		handler.logger.Warn(err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	universe, err := handler.app.TxCreateUniverse(r.Context(), payload.Name, userId, payload.Description)
 	if httperr := util.CatchError(&err, util.HttpErrorHandler); httperr != nil {
 		if err := httperr.Send(w); err != nil {
 			handler.logger.Error(err)
@@ -65,24 +87,26 @@ func (handler *UniverseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 
 // MomentHandler manages all these requets related with the Universe model
 type MomentHandler struct {
+	Handler
 	app    *MomentApplication
 	logger *logrus.Logger
 }
 
 // NewMomentHandler builds a UniverseHandler instance
-func NewMomentHandler(repo MomentRepository, logger *logrus.Logger) *MomentHandler {
+func NewMomentHandler(handler Handler, repo MomentRepository, logger *logrus.Logger) *MomentHandler {
 	app := &MomentApplication{
 		repo: repo,
 	}
 
 	return &MomentHandler{
-		app:    app,
-		logger: logger,
+		Handler: handler,
+		app:     app,
+		logger:  logger,
 	}
 }
 
-// ServeHTTP handles all request for universe creation
-func (handler *MomentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// CreateMoment handles all request for universe creation
+func (handler *MomentHandler) CreateMoment(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		handler.logger.Warn(err)
@@ -97,7 +121,7 @@ func (handler *MomentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	universe, err := handler.app.MomentCreate(r.Context(), payload.Name, payload.User)
+	moment, err := handler.app.TxCreateMoment(r.Context(), payload.Name, payload.User)
 	if httperr := util.CatchError(&err, util.HttpErrorHandler); httperr != nil {
 		if err := httperr.Send(w); err != nil {
 			handler.logger.Error(err)
@@ -106,7 +130,7 @@ func (handler *MomentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	response, err := json.Marshal(universe)
+	response, err := json.Marshal(moment)
 	if err != nil {
 		handler.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
