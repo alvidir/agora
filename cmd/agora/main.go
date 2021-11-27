@@ -27,7 +27,7 @@ func setUniverseRouter(r *mux.Router, handler agora.Handler, client *graphql.Cli
 	}
 
 	h := agora.NewUniverseHandler(handler, repo, logger)
-	r.HandleFunc("/universe/create", h.CreateUniverse).Methods("POST")
+	r.HandleFunc("/universe", h.CreateUniverse).Methods("POST")
 	return r
 }
 
@@ -37,7 +37,7 @@ func setMomentRouter(r *mux.Router, handler agora.Handler, client *graphql.Clien
 	}
 
 	h := agora.NewMomentHandler(handler, repo, logger)
-	r.HandleFunc("/moment/create", h.CreateMoment).Methods("POST")
+	r.HandleFunc("/moment", h.CreateMoment).Methods("POST")
 	return r
 }
 
