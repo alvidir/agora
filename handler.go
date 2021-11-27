@@ -68,8 +68,8 @@ func (handler *UniverseHandler) CreateUniverse(w http.ResponseWriter, r *http.Re
 	}
 
 	universe, err := handler.app.TxCreateUniverse(r.Context(), payload.Name, userId, payload.Description)
-	if httperr := util.CatchError(&err, util.HttpErrorHandler); httperr != nil {
-		if err := httperr.Send(w); err != nil {
+	if cerr := util.CatchError(&err, util.ErrorHandler); cerr != nil {
+		if err := cerr.Send(w); err != nil {
 			handler.logger.Error(err)
 		}
 
@@ -116,16 +116,31 @@ func (handler *MomentHandler) CreateMoment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var payload Universe
+	var payload Moment
 	if err = json.Unmarshal(data, &payload); err != nil {
 		handler.logger.Warn(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	moment, err := handler.app.TxCreateMoment(r.Context(), payload.Name, payload.User)
-	if httperr := util.CatchError(&err, util.HttpErrorHandler); httperr != nil {
-		if err := httperr.Send(w); err != nil {
+	if len(payload.Universe.Id) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var beforeId string
+	if payload.Before != nil {
+		beforeId = payload.Before.Id
+	}
+
+	var afterId string
+	if payload.After != nil {
+		afterId = payload.After.Id
+	}
+
+	moment, txErr := handler.app.TxCreateMoment(r.Context(), payload.Universe.Id, payload.Date, beforeId, afterId)
+	if err := util.CatchError(&txErr, util.ErrorHandler); err != nil {
+		if err := err.Send(w); err != nil {
 			handler.logger.Error(err)
 		}
 

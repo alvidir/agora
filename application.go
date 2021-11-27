@@ -34,3 +34,12 @@ func (app *UniverseApplication) TxCreateUniverse(ctx context.Context, name, user
 
 	return universe, app.repo.Insert(ctx, universe)
 }
+
+// MomentApplication implements all available transactions for any Moment
+type MomentApplication struct {
+	repo MomentRepository
+}
+
+func (app *MomentApplication) TxCreateMoment(ctx context.Context, universe, date, before, after string) (*Moment, error) {
+	return nil, errors.New("not implemented")
+}

@@ -3,7 +3,16 @@ type Universe {
     name: String! @search(by: [hash, regexp])
     user: String! @search(by: [hash])
     description: String # a brief description of the universe itself
-    # moments: [Moment!] @hasInverse(field: universe)
+    moments: [Moment!] @hasInverse(field: universe)
+}
+
+type Moment {
+    id: ID!
+    universe: Universe!
+    date: String @search(by: [term])
+    # happens: [Event!]! @hasInverse(field: when)
+    before: Moment @hasInverse(field: after)
+    after: Moment
 }
 
 type Mutation {
@@ -13,16 +22,14 @@ type Mutation {
         body: "{name: $name, description: $description}"
         forwardHeaders: ["Authorization"]
     })
-}
 
-# type Moment {
-#     id: ID!
-#     universe: Universe!
-#     date: String @search(by: [term])
-#     # happens: [Event!]! @hasInverse(field: when)
-#     before: Moment @hasInverse(field: after)
-#     after: Moment
-# }
+    newMoment(universe: String!, date: String, before: String, after: String): Moment @custom(http:{
+        url: "http://dev:8000/moment/create"
+        method: "POST",
+        body: "{universe: $universe, date: $date, before: $before, after: $after}"
+        forwardHeaders: ["Authorization"]
+    })
+}
 
 # type Event {
 #     id: ID!
