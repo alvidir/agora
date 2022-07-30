@@ -8,26 +8,19 @@ import sys
 from dotenv import load_dotenv
 load_dotenv() 
 
-WORKDIR = os.getenv("GRAPHQL_PATH")
-REGEX = os.getenv("GRAPHQL_FILE_REGEX")
-URL = os.getenv("DGRAPH_ALTER_URL")
+WORKDIR = os.getenv("GRAPHQL_PATH") or "./graphql"
+REGEX = os.getenv("GRAPHQL_FILE_REGEX") or "\w*.graphql"
+URL = os.getenv("DGRAPH_DSN")
 
 regex = re.compile(REGEX)
-
-def is_migration_files(filename) -> bool:
-    return regex.match(filename)
 
 def main() -> int:
     print("Browsing for migration files...")
 
     scripts = []
     for root, _, files in os.walk(WORKDIR):
-        files = filter(is_migration_files, files)
-        
-        def make_absolute_path(filename) -> str:
-            return os.path.join(root, filename)
-
-        files = map(make_absolute_path, files)
+        files = filter(lambda filename: regex.match(filename), files)
+        files = map(lambda filename: os.path.join(root, filename), files)
         scripts += list(files)
 
     if not scripts:
@@ -42,8 +35,9 @@ def main() -> int:
         query += "{}\n".format(fo.read())
         fo.close()
 
-    print("Applying migrations at {}".format(URL))
-    response = requests.post(URL,
+    target_url = "{}/admin/schema".format(URL)
+    print("Applying migrations at {}".format(target_url))
+    response = requests.post(target_url,
         data=query.encode(encoding='utf-8'),
         headers={
             "Content-Type": "application/json"

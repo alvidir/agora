@@ -10,9 +10,8 @@ type Moment {
     id: ID!
     universe: Universe!
     date: String @search(by: [term])
-    # happens: [Event!]! @hasInverse(field: when)
     before: Moment @hasInverse(field: after)
-    after: Moment
+    after: Moment @hasInverse(field: before)
 }
 
 type Mutation {
@@ -30,59 +29,3 @@ type Mutation {
         forwardHeaders: ["Authorization"]
     })
 }
-
-# type Event {
-#     id: ID!
-#     name: String! @search(by: [hash, regexp])
-#     description: String @search(by: [term]) # a detailed description of the event
-#     related: [Event!]! @hasInverse(field: related)
-#     when: Moment!
-#     where: Location
-#     who: [Character!]!
-# }
-
-# type Trait {
-#     name: String! @search(by: [hash, regexp])
-#     values: [String!]! @search(by: [term])
-#     owner: Entity!
-# }
-
-# interface Entity {
-#     id: ID!
-#     universe: Universe!
-#     name: String! @search(by: [hash, regexp])
-#     description: String @search(by: [term])
-#     traits: [Trait!]! @hasInverse(field: owner)
-# }
-
-# type Location implements Entity {
-#     events: [Event!]! @hasInverse(field: where)
-#     belongs: Location
-#     latitude: Float
-#     longitude: Float
-#     z: Float
-# }
-
-# type Character implements Entity {
-#     parents: [Character!]!
-#     involved: [Event!]! @hasInverse(field: who)
-# }
-
-# type Change {
-#     description: String @search(by: [term])
-#     was: Entity!
-#     becomes: Entity!
-#     cause: Event!
-# }
-
-# struct Direction {
-#     UNIDIRECTIONAL,
-#     BIDIRECTIONAL,
-# }
-
-# type Relation {
-#     name: String! @search(by: [hash, regexp])
-#     description: String @search(by: [term])
-#     from: [Character!]!
-#     to: [Character!]!
-# }

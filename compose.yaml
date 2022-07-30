@@ -1,0 +1,32 @@
+services:
+  zero:
+    container_name: agora-dgraph-zero
+    image: docker.io/dgraph/dgraph:v21.12.0
+    restart: always
+    volumes:
+      - dgraph-data:/dgraph
+    security_opt:
+      label: disable
+    command: dgraph zero --my=zero:5080
+
+  alpha:
+    container_name: agora-dgraph-alpha
+    image: docker.io/dgraph/dgraph:v21.12.0
+    restart: always
+    volumes:
+      - dgraph-data:/dgraph
+    # ports:
+    #   - 8080:8080
+    #   - 9080:9080
+    security_opt:
+      label: disable
+    depends_on: 
+      - zero
+    command: dgraph alpha --my=alpha:7080 --zero=zero:5080 --security whitelist=10.89.0.0/16
+
+networks:
+    shared:
+        external: true
+
+volumes:
+  dgraph-data:
