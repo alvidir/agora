@@ -1,0 +1,9 @@
+FROM docker.io/python:3.9.13
+
+WORKDIR /usr/src/app
+
+RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN pip install requests python-dotenv
+
+COPY ./scripts/migrate_schema.py .
+CMD [ "python", "./migrate_schema.py" ]

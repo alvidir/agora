@@ -6,9 +6,9 @@ import requests
 import sys
 
 from dotenv import load_dotenv
-load_dotenv() 
+load_dotenv()
 
-WORKDIR = os.getenv("GRAPHQL_PATH") or "./graphql"
+WORKDIR = os.getenv("GRAPHQL_PATH") or "/etc/graphql"
 REGEX = os.getenv("GRAPHQL_FILE_REGEX") or "\w*.graphql"
 URL = os.getenv("DGRAPH_DSN")
 
@@ -29,24 +29,30 @@ def main() -> int:
 
     query = ""
     for path in sorted(scripts):
-        print("-\t{}".format(path))
+        print(f"-\t{path}")
 
         fo = open(path, "r")
-        query += "{}\n".format(fo.read())
+        query += f"{fo.read()}\n"
         fo.close()
 
-    target_url = "{}/admin/schema".format(URL)
-    print("Applying migrations at {}".format(target_url))
-    response = requests.post(target_url,
-        data=query.encode(encoding='utf-8'),
-        headers={
-            "Content-Type": "application/json"
-        }
-    )
+    target_url = f"{URL}/admin/schema"
+    print(f"Applying migrations at {target_url}")
+
+    try:
+        response = requests.post(target_url,
+            data=query.encode(encoding='utf-8'),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
+    except Exception as e:
+        print(f"Cannot perform POST request: {e}")
+        return 1
+
 
     data = response.json()
     if 'errors' in data:
-        print("Response: {}".format(data['errors']))
+        print(f"Response: {data['errors']}")
         print("FAILED")
         return 1
     

@@ -13,19 +13,3 @@ type Moment {
     before: Moment @hasInverse(field: after)
     after: Moment @hasInverse(field: before)
 }
-
-type Mutation {
-    newUniverse(name: String!, description: String): Universe @custom(http:{
-        url: "http://dev:8000/universe"
-        method: "POST",
-        body: "{name: $name, description: $description}"
-        forwardHeaders: ["Authorization"]
-    })
-
-    newMoment(universe: String!, date: String, before: String, after: String): Moment @custom(http:{
-        url: "http://dev:8000/moment"
-        method: "POST",
-        body: "{universe: $universe, date: $date, before: $before, after: $after}"
-        forwardHeaders: ["Authorization"]
-    })
-}

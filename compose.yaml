@@ -24,6 +24,21 @@ services:
       - zero
     command: dgraph alpha --my=alpha:7080 --zero=zero:5080 --security whitelist=10.89.0.0/16
 
+  setup:
+    container_name: agora-setup-job
+    build: 
+      context: .
+      dockerfile: container/setup/containerfile
+    restart: on-failure
+    volumes:
+      - ./graphql:/etc/graphql:ro
+    security_opt:
+      label: disable
+    depends_on: 
+      - alpha
+    env_file:
+      - .env
+
 networks:
     shared:
         external: true
