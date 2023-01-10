@@ -1,0 +1,28 @@
+[package]
+name = "agora"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = "0.1.57"
+chrono = "0.4.22"
+dotenv = "0.15.0"
+env_logger = "0.10.0"
+lazy_static = "1.4.0"
+log = "0.4.17"
+protoc = "2.27.1"
+tokio = { version = "1.21.0", features = ["macros"] }
+tonic = "0.8.1"
+
+[build-dependencies]
+tonic-build = "0.8.0"
+
+[lib]
+name = "agora"
+path = "src/lib.rs"
+
+[[bin]]
+name = "agora"
+path = "src/main.rs"

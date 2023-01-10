@@ -1,0 +1,15 @@
+services:
+  postgres:
+    container_name: rauth-postgres
+    image: docker.io/postgres:alpine3.15
+    restart: on-failure
+    volumes:
+      - dbdata:/data/postgres
+      - ./migrations/.postgres:/docker-entrypoint-initdb.d
+    security_opt:
+      label: disable
+    env_file:
+      - .env
+
+volumes:
+  dbdata:

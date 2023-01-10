@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message ProjectDescriptor {
+  string name = 1; 
+}
+
+service Project {
+  rpc Create(ProjectDescriptor) returns (ProjectDescriptor);
+}

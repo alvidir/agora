@@ -1,0 +1,40 @@
+FROM docker.io/rust:1.66.0 as builder
+
+RUN USER=root cargo new --bin agora
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:george-edison55/cmake-3.x && \
+    apt-get install -y pkg-config libssl-dev libpq-dev cmake && \
+    apt-get install -y protobuf-compiler && \
+    apt-get upgrade -y
+
+WORKDIR /agora
+
+RUN rustup component add rustfmt --toolchain 1.66.0-x86_64-unknown-linux-gnu
+ADD . ./
+
+RUN cargo build --release
+
+######## Start a new stage from scratch #######
+FROM docker.io/debian:buster-slim
+ARG APP=/usr/src/app
+
+RUN apt-get update \
+    && apt-get install -y ca-certificates tzdata pkg-config libssl-dev libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Etc/UTC \
+    APP_USER=appuser
+
+RUN groupadd $APP_USER \
+    && useradd -g $APP_USER $APP_USER \
+    && mkdir -p ${APP}
+
+COPY --from=builder /agora/target/release/agora ${APP}/agora
+
+RUN chown -R $APP_USER:$APP_USER ${APP}
+
+USER $APP_USER
+WORKDIR ${APP}
+
+CMD ["./agora"]
