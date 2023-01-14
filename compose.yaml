@@ -1,15 +1,17 @@
 services:
-  postgres:
-    container_name: rauth-postgres
-    image: docker.io/postgres:alpine3.15
+  surreal:
+    container_name: agora-surreal
+    image: docker.io/surrealdb/surrealdb:1.0.0-beta.8
     restart: on-failure
+    ports:
+      - 5432:5432
     volumes:
-      - dbdata:/data/postgres
-      - ./migrations/.postgres:/docker-entrypoint-initdb.d
+      - dbdata:/data/surreal
     security_opt:
       label: disable
     env_file:
       - .env
+    command: ["start"]
 
 volumes:
   dbdata:

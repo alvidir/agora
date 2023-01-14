@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate log;
 
-mod errors;
+pub mod project;
+
 mod grpc;
+mod result;
+mod surreal;
 mod time;

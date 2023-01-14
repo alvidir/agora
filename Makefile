@@ -1,3 +1,17 @@
+install:
+	sudo dnf install \
+		curl \
+		llvm \
+		cmake \
+		binutils \
+		clang \
+		qemu-user \
+		musl-gcc \
+		openssl-devel \
+		pkg-config
+
+	sudo dnf groupinstall "Development Tools" "Development Libraries"
+
 build:
 	podman build -t alvidir/agora:latest -f ./container/agora/containerfile .
 
