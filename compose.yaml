@@ -1,7 +1,7 @@
 services:
   surreal:
     container_name: agora-surreal
-    image: docker.io/surrealdb/surrealdb:1.0.0-beta.8
+    image: docker.io/surrealdb/surrealdb:nightly
     restart: on-failure
     ports:
       - 5432:5432
@@ -9,8 +9,12 @@ services:
       - dbdata:/data/surreal
     security_opt:
       label: disable
-    env_file:
-      - .env
+    environment:
+      - BIND=${SURREAL_BIND}
+      - DB_PATH=${SURREAL_DB_PATH}
+      - USER=${SURREAL_USER}
+      - PASS=${SURREAL_PASS}
+      - LOG=${SURREAL_LOG}
     command: ["start"]
 
 volumes:

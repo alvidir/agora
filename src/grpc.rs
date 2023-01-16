@@ -27,7 +27,7 @@ pub fn get_header<T>(req: &Request<T>, header: &str) -> Result<String, Status> {
     let data = req
         .metadata()
         .get(header)
-        .ok_or_else(|| Status::aborted(Error::NotFound))
+        .ok_or_else(|| Into::<Status>::into(Error::Unauthorized))
         .map(|data| data.to_str())?;
 
     data.map(|data| data.to_string()).map_err(|err| {
@@ -36,6 +36,6 @@ pub fn get_header<T>(req: &Request<T>, header: &str) -> Result<String, Status> {
             Error::InvalidHeader,
             err
         );
-        Status::aborted(Error::InvalidHeader)
+        Error::InvalidHeader.into()
     })
 }

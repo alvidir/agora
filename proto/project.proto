@@ -3,9 +3,10 @@ syntax = "proto3";
 package project;
 
 message ProjectDescriptor {
-  string name = 1;
+    string id = 1;
+    string name = 2;
 }
 
 service Project {
-  rpc Create(ProjectDescriptor) returns (ProjectDescriptor);
+    rpc Create(ProjectDescriptor) returns (ProjectDescriptor);
 }

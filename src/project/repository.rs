@@ -1,22 +1,59 @@
 //! Infrastructure layer for managing projects persistency on SurrealDB.
 
-use std::borrow::Cow;
-
 use super::{application::ProjectRepository, domain::Project};
+use crate::metadata::repository::SurrealMetadata;
 use crate::result::{Error, Result};
 use crate::surreal;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
+use surrealdb::sql;
 use surrealdb::{engine::remote::ws::Client, Surreal};
-use surrealdb::{sql, Response};
 
 const TABLENAME: &str = "project";
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct SurrealProject<'a> {
-    id: Option<String>,
-    user_id: Cow<'a, str>,
+    id: Cow<'a, str>,
     name: Cow<'a, str>,
+    meta: Cow<'a, SurrealMetadata<'a>>,
+}
+
+impl<'a> From<SurrealProject<'a>> for Project {
+    fn from(value: SurrealProject<'a>) -> Self {
+        Project {
+            id: value.id.into(),
+            name: value.name.into(),
+            meta: value.meta.into_owned().into(),
+        }
+    }
+}
+
+impl<'a> From<&Project> for SurrealProject<'a> {
+    fn from(value: &Project) -> Self {
+        let metadata: SurrealMetadata<'a> = value.meta.clone().into();
+
+        SurrealProject {
+            id: value.id.clone().into(),
+            name: value.name.clone().into(),
+            meta: Cow::Owned(metadata),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct SurrealNewProject<'a> {
+    name: Cow<'a, str>,
+    meta: SurrealMetadata<'a>,
+}
+
+impl<'a> From<&Project> for SurrealNewProject<'a> {
+    fn from(value: &Project) -> Self {
+        SurrealNewProject {
+            name: value.name.clone().into(),
+            meta: value.meta.clone().into(),
+        }
+    }
 }
 
 /// Repository for managing projects persistency
@@ -24,70 +61,55 @@ pub struct SurrealProjectRepository<'a> {
     pub client: &'a Surreal<Client>,
 }
 
-impl<'a> SurrealProjectRepository<'a> {
-    fn build(mut resp: Response) -> Result<Project> {
-        Ok(Project {
-            id: surreal::export_field(&mut resp, "id")?,
-            name: surreal::export_field(&mut resp, "name")?,
-            user_id: surreal::export_field(&mut resp, "user_id")?,
-        })
-    }
-}
-
 #[async_trait]
 impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
-    async fn find_by_name(&self, name: &str) -> Result<Project> {
+    async fn find_by_created_by_and_name(&self, created_by: &str, name: &str) -> Result<Project> {
         let sql = sql! {
             SELECT *
-            FROM type::table($table)
-            WHERE name = type::string($name)
+            FROM project
+            WHERE name = $name AND meta.created_by = $created_by;
         };
 
         let resp = self
             .client
             .query(sql)
-            .bind(("table", TABLENAME))
+            .bind(("created_by", created_by))
             .bind(("name", name))
             .await
             .map_err(|err| {
                 error!(
-                    "{} performing select by name query on surreal: {:?}",
+                    "{} performing select by created_by and name query on surreal: {}",
                     Error::Unknown,
                     err
                 );
+
                 Error::Unknown
             })?;
 
-        if resp.num_statements() == 0 {
+        let item = surreal::export_item::<SurrealProject, Project>(resp, 0)?;
+        if item.id.is_empty() {
             return Err(Error::NotFound);
         }
 
-        Self::build(resp)
+        Ok(item)
     }
 
     async fn create(&self, project: &mut Project) -> Result<()> {
-        let surreal_project: SurrealProject = self
+        let resp: SurrealProject = self
             .client
-            .create("project")
-            .content(SurrealProject {
-                id: None,
-                user_id: project.user_id.clone().into(),
-                name: project.name.clone().into(),
-            })
+            .create(TABLENAME)
+            .content(Into::<SurrealNewProject>::into(&*project))
             .await
             .map_err(|err| {
                 error!(
-                    "{} performing create query on surreal: {:?}",
+                    "{} performing create query on surreal: {}",
                     Error::Unknown,
                     err
                 );
                 Error::Unknown
             })?;
 
-        if let Some(id) = surreal_project.id {
-            project.id = id;
-        }
-
+        project.id = resp.id.into();
         Ok(())
     }
 }
