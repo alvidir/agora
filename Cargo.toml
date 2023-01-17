@@ -11,6 +11,7 @@ async-trait = "0.1.57"
 chrono = "0.4.22"
 dotenv = "0.15.0"
 env_logger = "0.10.0"
+lapin = "2.1.1"
 lazy_static = "1.4.0"
 log = "0.4.17"
 prost = "0.11.0" # protobuf
@@ -32,4 +33,8 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "agora"
-path = "src/main.rs"
+path = "src/bin/agora.rs"
+
+[[bin]]
+name = "agent"
+path = "src/bin/agent.rs"

@@ -1,4 +1,4 @@
-//! gRPC utilities for managing request's headers.
+//! gRPC utilities for managing request's headers and conversions.
 
 use tonic::{Request, Status};
 

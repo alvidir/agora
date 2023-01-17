@@ -63,7 +63,7 @@ pub struct SurrealProjectRepository<'a> {
 
 #[async_trait]
 impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
-    async fn find_by_created_by_and_name(&self, created_by: &str, name: &str) -> Result<Project> {
+    async fn find_by_name(&self, created_by: &str, name: &str) -> Result<Project> {
         let sql = sql! {
             SELECT *
             FROM project
@@ -92,6 +92,31 @@ impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
         }
 
         Ok(item)
+    }
+
+    async fn find_all(&self, created_by: &str) -> Result<Vec<Project>> {
+        let sql = sql! {
+            SELECT *
+            FROM project
+            WHERE meta.created_by = $created_by;
+        };
+
+        let resp = self
+            .client
+            .query(sql)
+            .bind(("created_by", created_by))
+            .await
+            .map_err(|err| {
+                error!(
+                    "{} performing select by created_by and name query on surreal: {}",
+                    Error::Unknown,
+                    err
+                );
+
+                Error::Unknown
+            })?;
+
+        Ok(surreal::export_items::<SurrealProject, Project>(resp, 0)?)
     }
 
     async fn create(&self, project: &mut Project) -> Result<()> {

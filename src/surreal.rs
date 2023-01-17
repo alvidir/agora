@@ -29,3 +29,27 @@ pub fn export_item<T: DeserializeOwned, U: From<T>>(mut resp: Response, index: u
         .map(Into::into)
         .ok_or(Error::NotFound)
 }
+
+/// Given a query response and an statement's index, returns the content of that statement deserialized
+/// into an instance of U.
+pub fn export_items<T: DeserializeOwned, U: From<T>>(
+    mut resp: Response,
+    index: usize,
+) -> Result<Vec<U>> {
+    let items = resp.take::<Vec<T>>(index).map_err(|err| {
+        error!(
+            "{} taking item from statement {}: {}",
+            Error::Unknown,
+            index,
+            err
+        );
+
+        Error::Unknown
+    })?;
+
+    if items.is_empty() {
+        return Err(Error::NotFound);
+    }
+
+    Ok(items.into_iter().map(Into::into).collect::<Vec<U>>())
+}
