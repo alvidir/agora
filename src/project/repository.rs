@@ -4,7 +4,6 @@ use super::{application::ProjectRepository, domain::Project};
 use crate::metadata::repository::SurrealMetadata;
 use crate::result::{Error, Result};
 use crate::surreal;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use surrealdb::sql;
@@ -61,7 +60,7 @@ pub struct SurrealProjectRepository<'a> {
     pub client: &'a Surreal<Client>,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
     async fn find_by_name(&self, created_by: &str, name: &str) -> Result<Project> {
         let sql = sql! {

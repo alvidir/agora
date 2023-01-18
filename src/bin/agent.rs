@@ -72,46 +72,10 @@ lazy_static! {
             .map_err(|err| format!("establishing connection with {}: {}", rabbitmq_dsn, err))
             .unwrap();
 
-        let channel = conn
-            .create_channel()
+        conn.create_channel()
             .await
             .map_err(|err| format!("creating rabbitmq channel: {}", err))
-            .unwrap();
-
-        let files_queue: String =
-            env::var(ENV_RABBITMQ_FILES_QUEUE).expect("rabbitmq files queue must be set");
-
-        let queue_options = QueueDeclareOptions {
-            durable: true,
-            auto_delete: false,
-            exclusive: false,
-            nowait: false,
-            passive: false,
-        };
-
-        channel
-            .queue_declare(&files_queue, queue_options, FieldTable::default())
-            .await
-            .map_err(|err| format!("declaring rabbitmq queue {}: {}", files_queue, err))
-            .unwrap();
-
-        let files_exchange: String =
-            env::var(ENV_RABBITMQ_FILES_EXCHANGE).expect("rabbitmq files exchange must be set");
-
-        let bind_options = QueueBindOptions { nowait: false };
-
-        channel
-            .queue_bind(
-                &files_queue,
-                &files_exchange,
-                "",
-                bind_options,
-                FieldTable::default(),
-            )
-            .await
-            .unwrap();
-
-        channel
+            .unwrap()
     });
 }
 

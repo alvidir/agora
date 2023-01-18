@@ -5,14 +5,18 @@ use crate::{
     metadata::domain::Metadata,
     result::{Error, Result},
 };
-use async_trait::async_trait;
 use std::sync::Arc;
 
-#[async_trait]
+#[async_trait::async_trait]
 pub trait ProjectRepository {
     async fn find_by_name(&self, user_id: &str, name: &str) -> Result<Project>;
     async fn find_all(&self, user_ud: &str) -> Result<Vec<Project>>;
     async fn create(&self, project: &mut Project) -> Result<()>;
+}
+
+#[async_trait::async_trait]
+pub trait EventBus {
+    async fn emit_project_created(&self, project: &Project) -> Result<()>;
 }
 
 pub struct ProjectApplication<P: ProjectRepository> {
