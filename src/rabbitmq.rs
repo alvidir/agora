@@ -1,5 +1,7 @@
 //! RabbitMQ utilities for managing events handlering and emitions.
 
+use std::{os::unix::thread::JoinHandleExt, sync::Arc};
+
 use crate::result::{Error, Result};
 use futures_util::stream::StreamExt;
 use lapin::{
@@ -9,19 +11,24 @@ use lapin::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-pub struct RabbitMqEventBus {
-    chann: Channel,
+#[async_trait::async_trait]
+pub trait EventHandler {
+    async fn on_event(&self, body: Vec<u8>) -> Result<()>;
 }
 
 /// Represents all the possible kind of events that may be handled or emited.
 #[derive(strum_macros::Display, Serialize, Deserialize)]
 #[strum(serialize_all = "snake_case")]
-pub enum EventKind {
+pub(crate) enum EventKind {
     Created,
     Deleted,
 }
 
-impl RabbitMqEventBus {
+pub struct RabbitMqEventBus<'a> {
+    pub chann: Arc<&'a Channel>,
+}
+
+impl<'a> RabbitMqEventBus<'a> {
     /// Given an exchange name and a queue name performs the binding between them two.
     /// Notice that this method will create the queue on RabbitMq if it does not exists, but the exchange must
     /// be already present.
@@ -67,11 +74,7 @@ impl RabbitMqEventBus {
 
     /// Given a queue name and an event handler, listens on the queue with that name and forwards every event's
     /// data to the handler.
-    pub async fn consume<T: DeserializeOwned, H: Fn(T)>(
-        &self,
-        queue: &str,
-        handler: H,
-    ) -> Result<()> {
+    pub async fn consume(&self, queue: &str, handler: impl EventHandler) -> Result<()> {
         let mut consumer = self
             .chann
             .basic_consume(
@@ -117,12 +120,7 @@ impl RabbitMqEventBus {
                 continue;
             }
 
-            let data: T = bincode::deserialize(&delivery.data).map_err(|err| {
-                error!("{} deserializing event data: {}", Error::Unknown, err);
-                Error::Unknown
-            })?;
-
-            handler(data);
+            handler.on_event(delivery.data).await;
         }
 
         Ok(())

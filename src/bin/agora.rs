@@ -70,7 +70,14 @@ lazy_static! {
     });
 }
 
-pub async fn start_server() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::init();
+
+    if let Err(err) = dotenv::dotenv() {
+        warn!("processing dotenv file {}", err);
+    }
+
     let project_repo = Arc::new(SurrealProjectRepository {
         client: SURREAL_CLIENT.get().await,
     });
@@ -91,15 +98,4 @@ pub async fn start_server() -> Result<(), Box<dyn Error>> {
         .serve(addr)
         .await?;
     Ok(())
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    env_logger::init();
-
-    if let Err(err) = dotenv::dotenv() {
-        warn!("processing dotenv file {}", err);
-    }
-
-    start_server().await
 }
