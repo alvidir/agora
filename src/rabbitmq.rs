@@ -1,6 +1,6 @@
 //! RabbitMQ utilities for managing events handlering and emitions.
 
-use std::{os::unix::thread::JoinHandleExt, sync::Arc};
+use std::sync::Arc;
 
 use crate::result::{Error, Result};
 use futures_util::stream::StreamExt;
@@ -9,11 +9,11 @@ use lapin::{
     types::FieldTable,
     Channel,
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[async_trait::async_trait]
 pub trait EventHandler {
-    async fn on_event(&self, body: Vec<u8>) -> Result<()>;
+    async fn on_event(&self, body: Vec<u8>);
 }
 
 /// Represents all the possible kind of events that may be handled or emited.

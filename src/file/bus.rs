@@ -15,12 +15,12 @@ use serde::{Deserialize, Serialize};
 /// Determines the data to be provided/expected when emiting/handlering a file related event.
 #[derive(Serialize, Deserialize)]
 pub struct FileEventPayload<'a> {
-    issuer: &'a str,
-    user_id: i32,
-    app_id: &'a str,
-    file_name: &'a str,
-    file_id: &'a str,
-    kind: EventKind,
+    pub(super) issuer: &'a str,
+    pub(super) user_id: i32,
+    pub(super) app_id: &'a str,
+    pub(super) file_name: &'a str,
+    pub(super) file_id: &'a str,
+    pub(super) kind: EventKind,
 }
 
 pub struct RabbitMqFileBus<'a> {

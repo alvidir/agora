@@ -3,16 +3,12 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
-use agora::file::bus::RabbitMqFileBus;
 use agora::file::handler::FileEventHandler;
-use agora::project::application::{ProjectApplication, ProjectRepository};
-use agora::project::grpc::{GrpcProjectServer, ProjectServer};
+use agora::project::application::ProjectApplication;
 use agora::project::repository::SurrealProjectRepository;
 use agora::rabbitmq::RabbitMqEventBus;
 use async_once::AsyncOnce;
-use lapin::{
-    options::*, types::FieldTable, Channel, Connection, ConnectionProperties, ExchangeKind,
-};
+use lapin::{Channel, Connection, ConnectionProperties};
 use std::env;
 use std::error::Error;
 use std::sync::Arc;
@@ -29,6 +25,7 @@ const ENV_RABBITMQ_FILES_EXCHANGE: &str = "RABBITMQ_FILES_EXCHANGE";
 const ENV_RABBITMQ_FILES_QUEUE: &str = "RABBITMQ_FILES_QUEUE";
 const ENV_RABBITMQ_DSN: &str = "RABBITMQ_DSN";
 const ENV_EVENT_ISSUER: &str = "EVENT_ISSUER";
+const ENV_ISSUERS_WHITELIST: &str = "ISSUERS_WHITELIST";
 
 lazy_static! {
     static ref SURREAL_CLIENT: AsyncOnce<Surreal<Client>> = AsyncOnce::new(async {
@@ -84,21 +81,9 @@ lazy_static! {
     static ref RABBITMQ_FILES_QUEUE: String =
         env::var(ENV_RABBITMQ_FILES_QUEUE).expect("rabbitmq files queue must be set");
     static ref EVENT_ISSUER: String = env::var(ENV_EVENT_ISSUER).expect("event issuer must be set");
-}
-
-async fn handle_rabbitmq_file_events<'a, P>(
-    bus: &RabbitMqEventBus<'a>,
-    handler: FileEventHandler<'a, P>,
-) where
-    P: ProjectRepository,
-{
-    bus.queue_bind(&*RABBITMQ_FILES_EXCHANGE, &*RABBITMQ_FILES_QUEUE)
-        .await
-        .unwrap();
-
-    // bus.consume(&*RABBITMQ_FILES_QUEUE, handler.on_event())
-    //     .await
-    //     .unwrap();
+    static ref ISSUERS_WHITELIST: Vec<String> = env::var(ENV_ISSUERS_WHITELIST)
+        .map(|s| s.split(";").map(Into::into).collect())
+        .expect("issuers whitelist must be set");
 }
 
 #[tokio::main]
@@ -117,15 +102,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
         project_repo: project_repo.clone(),
     };
 
-    let issuers_blacklist: Vec<&str> = vec![&*EVENT_ISSUER];
     let file_event_handler = FileEventHandler {
-        project_app: Arc::new(&project_app),
-        issuers_blacklist: &issuers_blacklist,
+        project_app: project_app,
+        issuers_whitelist: &*ISSUERS_WHITELIST,
     };
 
     let bus = RabbitMqEventBus {
         chann: Arc::new(RABBITMQ_CONN.get().await),
     };
+
+    bus.queue_bind(&*RABBITMQ_FILES_EXCHANGE, &*RABBITMQ_FILES_QUEUE)
+        .await
+        .unwrap();
+
+    bus.consume(&*RABBITMQ_FILES_QUEUE, file_event_handler)
+        .await
+        .unwrap();
 
     Ok(())
 }

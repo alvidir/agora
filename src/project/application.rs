@@ -2,6 +2,7 @@
 
 use super::domain::Project;
 use crate::{
+    file::handler::ProjectApplication as EventProjectAplication,
     metadata::domain::Metadata,
     result::{Error, Result},
 };
@@ -41,5 +42,12 @@ impl<P: ProjectRepository> ProjectApplication<P> {
     pub async fn list(&self, uid: &str) -> Result<Vec<Project>> {
         info!("processing a \"list\" projects request for user {} ", uid);
         Ok(self.project_repo.find_all(uid).await?)
+    }
+}
+
+#[async_trait::async_trait]
+impl<P: ProjectRepository + Sync + Send> EventProjectAplication for ProjectApplication<P> {
+    async fn create_with_id(&self, id: &str, uid: &str, name: &str) -> Result<Project> {
+        todo!()
     }
 }
