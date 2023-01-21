@@ -17,6 +17,7 @@ impl From<Error> for Status {
             Error::WrongCredentials => Status::unauthenticated(value),
             Error::RegexNotMatch => Status::failed_precondition(value),
             Error::AlreadyExists => Status::already_exists(value),
+            Error::MissingFields => Status::invalid_argument(value),
         }
     }
 }

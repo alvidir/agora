@@ -98,12 +98,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         client: SURREAL_CLIENT.get().await,
     });
 
-    let project_app = ProjectApplication {
+    let project_app = Arc::new(ProjectApplication {
         project_repo: project_repo.clone(),
-    };
+    });
 
     let file_event_handler = FileEventHandler {
-        project_app: project_app,
+        project_app: project_app.clone(),
         issuers_whitelist: &*ISSUERS_WHITELIST,
     };
 

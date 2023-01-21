@@ -29,6 +29,8 @@ pub enum Error {
     RegexNotMatch,
     #[strum(serialize = "E010")]
     AlreadyExists,
+    #[strum(serialize = "E011")]
+    MissingFields,
 }
 
 impl From<Error> for String {

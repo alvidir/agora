@@ -17,4 +17,15 @@ impl Project {
             meta,
         }
     }
+
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn meta(&self) -> &Metadata {
+        &self.meta
+    }
 }

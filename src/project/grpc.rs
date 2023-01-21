@@ -14,7 +14,7 @@ use proto::project_server::Project;
 pub use proto::project_server::ProjectServer;
 
 // Proto message structs
-use proto::{ProjectDescriptor, ProjectDescriptorList, ProjectLocator};
+use proto::ProjectDescriptor;
 
 pub struct GrpcProjectServer<P: ProjectRepository + Sync + Send> {
     pub project_app: ProjectApplication<P>,
@@ -31,7 +31,7 @@ impl<P: 'static + ProjectRepository + Sync + Send> Project for GrpcProjectServer
         let msg_ref = request.into_inner();
 
         self.project_app
-            .create(&uid, &msg_ref.name)
+            .create("", &uid, &msg_ref.name)
             .await
             .map(|project| {
                 Response::new(ProjectDescriptor {
@@ -40,19 +40,5 @@ impl<P: 'static + ProjectRepository + Sync + Send> Project for GrpcProjectServer
                 })
             })
             .map_err(Into::into)
-    }
-
-    async fn retrieve(
-        &self,
-        request: Request<ProjectLocator>,
-    ) -> Result<Response<ProjectDescriptor>, Status> {
-        todo!()
-    }
-
-    async fn list(
-        &self,
-        request: Request<ProjectLocator>,
-    ) -> Result<Response<ProjectDescriptorList>, Status> {
-        todo!()
     }
 }

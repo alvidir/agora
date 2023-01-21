@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 #[async_trait::async_trait]
 pub trait EventHandler {
-    async fn on_event(&self, body: Vec<u8>);
+    async fn on_event(&self, body: Vec<u8>) -> Result<()>;
 }
 
 /// Represents all the possible kind of events that may be handled or emited.
@@ -111,8 +111,9 @@ impl<'a> RabbitMqEventBus<'a> {
 
             if let Err(err) = delivery.ack(BasicAckOptions::default()).await {
                 error!(
-                    "{} performing a delivery ack on queue {}: {}",
+                    "{} performing an ack on delivery {} from queue {}: {}",
                     Error::Unknown,
+                    delivery.delivery_tag,
                     queue,
                     err
                 );
@@ -120,7 +121,15 @@ impl<'a> RabbitMqEventBus<'a> {
                 continue;
             }
 
-            handler.on_event(delivery.data).await;
+            if let Err(err) = handler.on_event(delivery.data).await {
+                error!(
+                    "{} processing an event from queue {} and tag {}: {}",
+                    Error::Unknown,
+                    queue,
+                    delivery.delivery_tag,
+                    err
+                );
+            };
         }
 
         Ok(())

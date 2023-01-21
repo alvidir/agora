@@ -19,4 +19,20 @@ impl Metadata {
             deleted_at: None,
         }
     }
+
+    pub fn created_by(&self) -> Option<&str> {
+        self.created_by.as_deref()
+    }
+
+    pub fn created_at(&self) -> Option<SystemTime> {
+        self.created_at
+    }
+
+    pub fn updated_at(&self) -> Option<SystemTime> {
+        self.updated_at
+    }
+
+    pub fn deleted_at(&self) -> Option<SystemTime> {
+        self.deleted_at
+    }
 }

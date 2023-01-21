@@ -1,11 +1,7 @@
 //! Application layer of the project entity.
 
 use super::domain::Project;
-use crate::{
-    file::handler::ProjectApplication as EventProjectAplication,
-    metadata::domain::Metadata,
-    result::{Error, Result},
-};
+use crate::{metadata::domain::Metadata, result::Result};
 use std::sync::Arc;
 
 #[async_trait::async_trait]
@@ -25,15 +21,18 @@ pub struct ProjectApplication<P: ProjectRepository> {
 }
 
 impl<P: ProjectRepository> ProjectApplication<P> {
-    pub async fn create(&self, uid: &str, name: &str) -> Result<Project> {
-        info!("processing a \"create\" project request for user {} ", uid);
-
-        let Err(Error::NotFound) = self.project_repo.find_by_name(uid, name).await else {
-            return Err(Error::AlreadyExists);
-        };
+    pub async fn create(&self, id: &str, uid: &str, name: &str) -> Result<Project> {
+        if id.is_empty() {
+            info!("processing a \"create\" project request for user {}", uid);
+        } else {
+            info!(
+                "processing a \"create\" with id {} project request for user {}",
+                id, uid
+            );
+        }
 
         let meta = Metadata::new(uid);
-        let mut project = Project::new("", name, meta);
+        let mut project = Project::new(id, name, meta);
         self.project_repo.create(&mut project).await?;
 
         Ok(project)
@@ -42,12 +41,5 @@ impl<P: ProjectRepository> ProjectApplication<P> {
     pub async fn list(&self, uid: &str) -> Result<Vec<Project>> {
         info!("processing a \"list\" projects request for user {} ", uid);
         Ok(self.project_repo.find_all(uid).await?)
-    }
-}
-
-#[async_trait::async_trait]
-impl<P: ProjectRepository + Sync + Send> EventProjectAplication for ProjectApplication<P> {
-    async fn create_with_id(&self, id: &str, uid: &str, name: &str) -> Result<Project> {
-        todo!()
     }
 }
