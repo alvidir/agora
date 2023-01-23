@@ -21,15 +21,16 @@ pub struct ProjectApplication<P: ProjectRepository> {
 }
 
 impl<P: ProjectRepository> ProjectApplication<P> {
-    pub async fn create(&self, id: &str, uid: &str, name: &str) -> Result<Project> {
-        if id.is_empty() {
-            info!("processing a \"create\" project request for user {}", uid);
-        } else {
-            info!(
-                "processing a \"create\" with id {} project request for user {}",
-                id, uid
-            );
-        }
+    pub async fn create(&self, uid: &str, name: &str) -> Result<Project> {
+        info!("processing a \"create\" project request for user {}", uid);
+        self.create_with_id("", uid, name).await
+    }
+
+    pub(crate) async fn create_with_id(&self, id: &str, uid: &str, name: &str) -> Result<Project> {
+        info!(
+            "processing a \"create\" with id {} project request for user {}",
+            id, uid
+        );
 
         let meta = Metadata::new(uid);
         let mut project = Project::new(id, name, meta);
@@ -40,6 +41,6 @@ impl<P: ProjectRepository> ProjectApplication<P> {
 
     pub async fn list(&self, uid: &str) -> Result<Vec<Project>> {
         info!("processing a \"list\" projects request for user {} ", uid);
-        Ok(self.project_repo.find_all(uid).await?)
+        self.project_repo.find_all(uid).await
     }
 }

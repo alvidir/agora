@@ -42,7 +42,7 @@ impl<'a> RabbitMqEventBus<'a> {
         };
 
         self.chann
-            .queue_declare(&queue, queue_options, FieldTable::default())
+            .queue_declare(queue, queue_options, FieldTable::default())
             .await
             .map_err(|err| {
                 warn!("declaring rabbitmq queue {}: {}", queue, err);
@@ -51,8 +51,8 @@ impl<'a> RabbitMqEventBus<'a> {
 
         self.chann
             .queue_bind(
-                &queue,
-                &exchange,
+                queue,
+                exchange,
                 "",
                 QueueBindOptions::default(),
                 FieldTable::default(),

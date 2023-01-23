@@ -31,7 +31,7 @@ impl<P: 'static + ProjectRepository + Sync + Send> Project for GrpcProjectServer
         let msg_ref = request.into_inner();
 
         self.project_app
-            .create("", &uid, &msg_ref.name)
+            .create(&uid, &msg_ref.name)
             .await
             .map(|project| {
                 Response::new(ProjectDescriptor {

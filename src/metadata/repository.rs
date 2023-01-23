@@ -17,9 +17,9 @@ impl<'a> From<Metadata> for SurrealMetadata<'a> {
     fn from(value: Metadata) -> Self {
         SurrealMetadata {
             created_by: value.created_by.map(Into::into),
-            created_at: value.created_at.map(|item| Cow::Owned(item)),
-            updated_at: value.updated_at.map(|item| Cow::Owned(item)),
-            deleted_at: value.deleted_at.map(|item| Cow::Owned(item)),
+            created_at: value.created_at.map(Cow::Owned),
+            updated_at: value.updated_at.map(Cow::Owned),
+            deleted_at: value.deleted_at.map(Cow::Owned),
         }
     }
 }

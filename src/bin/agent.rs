@@ -82,7 +82,7 @@ lazy_static! {
         env::var(ENV_RABBITMQ_FILES_QUEUE).expect("rabbitmq files queue must be set");
     static ref EVENT_ISSUER: String = env::var(ENV_EVENT_ISSUER).expect("event issuer must be set");
     static ref ISSUERS_WHITELIST: Vec<String> = env::var(ENV_ISSUERS_WHITELIST)
-        .map(|s| s.split(";").map(Into::into).collect())
+        .map(|s| s.split(';').map(Into::into).collect())
         .expect("issuers whitelist must be set");
 }
 
@@ -98,24 +98,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
         client: SURREAL_CLIENT.get().await,
     });
 
-    let project_app = Arc::new(ProjectApplication {
+    let project_app = ProjectApplication {
         project_repo: project_repo.clone(),
-    });
+    };
 
     let file_event_handler = FileEventHandler {
-        project_app: project_app.clone(),
-        issuers_whitelist: &*ISSUERS_WHITELIST,
+        project_app,
+        issuers_whitelist: &ISSUERS_WHITELIST,
     };
 
     let bus = RabbitMqEventBus {
         chann: Arc::new(RABBITMQ_CONN.get().await),
     };
 
-    bus.queue_bind(&*RABBITMQ_FILES_EXCHANGE, &*RABBITMQ_FILES_QUEUE)
+    bus.queue_bind(&RABBITMQ_FILES_EXCHANGE, &RABBITMQ_FILES_QUEUE)
         .await
         .unwrap();
 
-    bus.consume(&*RABBITMQ_FILES_QUEUE, file_event_handler)
+    bus.consume(&RABBITMQ_FILES_QUEUE, file_event_handler)
         .await
         .unwrap();
 
