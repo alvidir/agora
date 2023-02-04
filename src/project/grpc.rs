@@ -1,7 +1,10 @@
 //! Infrastructure layer for serving the project's aplication as an gRPC service.
 
 use crate::grpc;
-use crate::project::application::{ProjectApplication, ProjectRepository};
+use crate::project::{
+    application::{ProjectApplication, ProjectRepository},
+    domain,
+};
 use tonic::{Request, Response, Status};
 
 // Import the generated rust code into module
@@ -31,14 +34,33 @@ impl<P: 'static + ProjectRepository + Sync + Send> Project for GrpcProjectServer
         let msg_ref = request.into_inner();
 
         self.project_app
-            .create(&uid, &msg_ref.name)
+            .create(&msg_ref.name, &msg_ref.description, &uid)
             .await
-            .map(|project| {
-                Response::new(ProjectDescriptor {
-                    id: project.id,
-                    name: msg_ref.name,
-                })
-            })
+            .map(|project| Response::new(project.into()))
             .map_err(Into::into)
+    }
+
+    async fn update(
+        &self,
+        request: Request<ProjectDescriptor>,
+    ) -> Result<Response<ProjectDescriptor>, Status> {
+        let uid = grpc::get_header(&request, self.uid_header)?;
+        let msg_ref = request.into_inner();
+
+        self.project_app
+            .update(&msg_ref.id, &msg_ref.name, &msg_ref.description, &uid)
+            .await
+            .map(|project| Response::new(project.into()))
+            .map_err(Into::into)
+    }
+}
+
+impl From<domain::Project> for ProjectDescriptor {
+    fn from(value: domain::Project) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            description: value.description,
+        }
     }
 }

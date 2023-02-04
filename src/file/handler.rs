@@ -8,11 +8,6 @@ use crate::{
 
 use super::bus::FileEventPayload;
 
-// #[async_trait::async_trait]
-// pub trait ProjectApplication {
-//     async fn create_with_id(&self, id: &str, uid: &str, name: &str) -> Result<Project>;
-// }
-
 pub struct FileEventHandler<P: ProjectRepository> {
     pub issuers_whitelist: &'static [String],
     pub project_app: ProjectApplication<P>,
@@ -49,7 +44,7 @@ impl<P: ProjectRepository> FileEventHandler<P> {
         );
 
         self.project_app
-            .create_with_id(event.file_id, event.user_id, event.file_name)
+            .create_with_id(event.file_id, event.file_name, "", event.user_id)
             .await
             .map(|_| ())
     }

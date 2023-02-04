@@ -15,6 +15,7 @@ const TABLENAME: &str = "project";
 struct SurrealProject<'a> {
     id: Cow<'a, str>,
     name: Cow<'a, str>,
+    description: Cow<'a, str>,
     meta: Cow<'a, SurrealMetadata<'a>>,
 }
 
@@ -23,6 +24,7 @@ impl<'a> From<SurrealProject<'a>> for Project {
         Project {
             id: value.id.into(),
             name: value.name.into(),
+            description: value.description.into(),
             meta: value.meta.into_owned().into(),
         }
     }
@@ -35,20 +37,21 @@ impl<'a> From<&Project> for SurrealProject<'a> {
         SurrealProject {
             id: value.id.clone().into(),
             name: value.name.clone().into(),
+            description: value.description.clone().into(),
             meta: Cow::Owned(metadata),
         }
     }
 }
 
 #[derive(Serialize, Deserialize)]
-struct SurrealNewProject<'a> {
+struct SurrealAnonymousProject<'a> {
     name: Cow<'a, str>,
     meta: SurrealMetadata<'a>,
 }
 
-impl<'a> From<&Project> for SurrealNewProject<'a> {
+impl<'a> From<&Project> for SurrealAnonymousProject<'a> {
     fn from(value: &Project) -> Self {
-        SurrealNewProject {
+        SurrealAnonymousProject {
             name: value.name.clone().into(),
             meta: value.meta.clone().into(),
         }
@@ -62,6 +65,37 @@ pub struct SurrealProjectRepository<'a> {
 
 #[async_trait::async_trait]
 impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
+    async fn find(&self, created_by: &str, id: &str) -> Result<Project> {
+        let sql = sql! {
+            SELECT *
+            FROM project
+            WHERE id = $id AND meta.created_by = $created_by;
+        };
+
+        let resp = self
+            .client
+            .query(sql)
+            .bind(("created_by", created_by))
+            .bind(("id", id))
+            .await
+            .map_err(|err| {
+                error!(
+                    "{} performing select by created_by and id query on surreal: {}",
+                    Error::Unknown,
+                    err
+                );
+
+                Error::Unknown
+            })?;
+
+        let item = surreal::export_item::<SurrealProject, Project>(resp, 0)?;
+        if item.id.is_empty() {
+            return Err(Error::NotFound);
+        }
+
+        Ok(item)
+    }
+
     async fn find_by_name(&self, created_by: &str, name: &str) -> Result<Project> {
         let sql = sql! {
             SELECT *
@@ -122,7 +156,7 @@ impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
         let resp: SurrealProject = self
             .client
             .create(TABLENAME)
-            .content(Into::<SurrealNewProject>::into(&*project))
+            .content(Into::<SurrealAnonymousProject>::into(&*project))
             .await
             .map_err(|err| {
                 error!(
@@ -134,6 +168,23 @@ impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
             })?;
 
         project.id = resp.id.into();
+        Ok(())
+    }
+
+    async fn update(&self, project: &Project) -> Result<()> {
+        self.client
+            .update((TABLENAME, project.id()))
+            .content(Into::<SurrealProject>::into(project))
+            .await
+            .map_err(|err| {
+                error!(
+                    "{} performing create query on surreal: {}",
+                    Error::Unknown,
+                    err
+                );
+                Error::Unknown
+            })?;
+
         Ok(())
     }
 }

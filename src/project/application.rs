@@ -6,9 +6,11 @@ use std::sync::Arc;
 
 #[async_trait::async_trait]
 pub trait ProjectRepository {
-    async fn find_by_name(&self, user_id: &str, name: &str) -> Result<Project>;
-    async fn find_all(&self, user_ud: &str) -> Result<Vec<Project>>;
+    async fn find(&self, id: &str, created_by: &str) -> Result<Project>;
+    async fn find_by_name(&self, created_by: &str, name: &str) -> Result<Project>;
+    async fn find_all(&self, created_by: &str) -> Result<Vec<Project>>;
     async fn create(&self, project: &mut Project) -> Result<()>;
+    async fn update(&self, project: &Project) -> Result<()>;
 }
 
 #[async_trait::async_trait]
@@ -21,21 +23,46 @@ pub struct ProjectApplication<P: ProjectRepository> {
 }
 
 impl<P: ProjectRepository> ProjectApplication<P> {
-    pub async fn create(&self, uid: &str, name: &str) -> Result<Project> {
-        info!("processing a \"create\" project request for user {}", uid);
-        self.create_with_id("", uid, name).await
-    }
-
-    pub(crate) async fn create_with_id(&self, id: &str, uid: &str, name: &str) -> Result<Project> {
+    pub(crate) async fn create_with_id(
+        &self,
+        id: &str,
+        name: &str,
+        description: &str,
+        created_by: &str,
+    ) -> Result<Project> {
         info!(
-            "processing a \"create\" with id {} project request for user {}",
-            id, uid
+            "processing a \"create\" project request for user {}",
+            created_by
         );
 
-        let meta = Metadata::new(uid);
-        let mut project = Project::new(id, name, meta);
+        let meta = Metadata::new(created_by);
+        let mut project = Project::new(id, name, description, meta);
         self.project_repo.create(&mut project).await?;
 
+        Ok(project)
+    }
+
+    pub async fn create(&self, name: &str, description: &str, created_by: &str) -> Result<Project> {
+        self.create_with_id("", name, description, created_by).await
+    }
+
+    pub async fn update(
+        &self,
+        id: &str,
+        name: &str,
+        description: &str,
+        created_by: &str,
+    ) -> Result<Project> {
+        info!(
+            "processing a \"update\" project request for user {} ",
+            created_by
+        );
+
+        let mut project = self.project_repo.find(id, created_by).await?;
+        project.description = description.to_string();
+        project.name = name.to_string();
+
+        self.project_repo.update(&project).await?;
         Ok(project)
     }
 

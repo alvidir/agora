@@ -5,8 +5,10 @@ package project;
 message ProjectDescriptor {
     string id = 1;
     string name = 2;
+    string description = 3;
 }
 
 service Project {
     rpc Create(ProjectDescriptor) returns (ProjectDescriptor);
+    rpc Update(ProjectDescriptor) returns (ProjectDescriptor);
 }
