@@ -8,21 +8,21 @@ use crate::{
 use lapin::options::BasicPublishOptions;
 use lapin::{BasicProperties, Channel};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 /// Determines the data to be provided/expected when emiting/handlering a file related event.
 #[derive(Serialize, Deserialize)]
 pub struct FileEventPayload<'a> {
-    pub(super) issuer: &'a str,
     pub(super) user_id: &'a str,
     pub(super) app_id: &'a str,
     pub(super) file_name: &'a str,
     pub(super) file_id: &'a str,
-    pub(super) kind: EventKind,
+    pub(super) file_reference: Option<&'a str>,
+    pub(super) event_issuer: &'a str,
+    pub(super) event_kind: EventKind,
 }
 
 pub struct RabbitMqFileBus<'a> {
-    pub channel: Arc<&'a Channel>,
+    pub channel: &'a Channel,
     pub app_id: &'a str,
     pub issuer: &'a str,
     pub exchange: &'a str,
@@ -30,18 +30,19 @@ pub struct RabbitMqFileBus<'a> {
 
 #[async_trait::async_trait]
 impl<'a> ProjectEventBus for RabbitMqFileBus<'a> {
-    async fn emit_project_created(&self, project: &Project) -> Result<()> {
+    async fn emit_file_created(&self, project: &Project) -> Result<()> {
         let Some(user_id) = project.meta().created_by() else {
             return Err(Error::MissingFields);
         };
 
         let event = FileEventPayload {
-            issuer: self.issuer,
             user_id,
             app_id: self.app_id,
             file_name: project.name(),
             file_id: project.id(),
-            kind: EventKind::Created,
+            file_reference: project.reference(),
+            event_issuer: self.issuer,
+            event_kind: EventKind::Created,
         };
 
         let payload = serde_json::to_string(&event)

@@ -6,16 +6,20 @@ use crate::result::{Error, Result};
 use crate::surreal;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use surrealdb::sql;
 use surrealdb::{engine::remote::ws::Client, Surreal};
 
 const TABLENAME: &str = "project";
+
+const QUERY_FIND_PROJECT: &str =
+    "SELECT * FROM project WHERE id = $id AND meta.created_by = $created_by;";
+const QUERY_FIND_ALL_PROJECTS: &str = "SELECT * FROM project WHERE meta.created_by = $created_by;";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct SurrealProject<'a> {
     id: Cow<'a, str>,
     name: Cow<'a, str>,
     description: Cow<'a, str>,
+    reference: Option<Cow<'a, str>>,
     meta: Cow<'a, SurrealMetadata<'a>>,
 }
 
@@ -25,6 +29,7 @@ impl<'a> From<SurrealProject<'a>> for Project {
             id: value.id.into(),
             name: value.name.into(),
             description: value.description.into(),
+            reference: value.reference.map(Into::into),
             meta: value.meta.into_owned().into(),
         }
     }
@@ -38,6 +43,7 @@ impl<'a> From<&Project> for SurrealProject<'a> {
             id: value.id.clone().into(),
             name: value.name.clone().into(),
             description: value.description.clone().into(),
+            reference: value.reference().map(ToString::to_string).map(Into::into),
             meta: Cow::Owned(metadata),
         }
     }
@@ -46,6 +52,7 @@ impl<'a> From<&Project> for SurrealProject<'a> {
 #[derive(Serialize, Deserialize)]
 struct SurrealAnonymousProject<'a> {
     name: Cow<'a, str>,
+    reference: Option<Cow<'a, str>>,
     meta: SurrealMetadata<'a>,
 }
 
@@ -53,6 +60,7 @@ impl<'a> From<&Project> for SurrealAnonymousProject<'a> {
     fn from(value: &Project) -> Self {
         SurrealAnonymousProject {
             name: value.name.clone().into(),
+            reference: value.reference().map(ToString::to_string).map(Into::into),
             meta: value.meta.clone().into(),
         }
     }
@@ -66,15 +74,9 @@ pub struct SurrealProjectRepository<'a> {
 #[async_trait::async_trait]
 impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
     async fn find(&self, created_by: &str, id: &str) -> Result<Project> {
-        let sql = sql! {
-            SELECT *
-            FROM project
-            WHERE id = $id AND meta.created_by = $created_by;
-        };
-
         let resp = self
             .client
-            .query(sql)
+            .query(QUERY_FIND_PROJECT)
             .bind(("created_by", created_by))
             .bind(("id", id))
             .await
@@ -96,47 +98,10 @@ impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
         Ok(item)
     }
 
-    async fn find_by_name(&self, created_by: &str, name: &str) -> Result<Project> {
-        let sql = sql! {
-            SELECT *
-            FROM project
-            WHERE name = $name AND meta.created_by = $created_by;
-        };
-
-        let resp = self
-            .client
-            .query(sql)
-            .bind(("created_by", created_by))
-            .bind(("name", name))
-            .await
-            .map_err(|err| {
-                error!(
-                    "{} performing select by created_by and name query on surreal: {}",
-                    Error::Unknown,
-                    err
-                );
-
-                Error::Unknown
-            })?;
-
-        let item = surreal::export_item::<SurrealProject, Project>(resp, 0)?;
-        if item.id.is_empty() {
-            return Err(Error::NotFound);
-        }
-
-        Ok(item)
-    }
-
     async fn find_all(&self, created_by: &str) -> Result<Vec<Project>> {
-        let sql = sql! {
-            SELECT *
-            FROM project
-            WHERE meta.created_by = $created_by;
-        };
-
         let resp = self
             .client
-            .query(sql)
+            .query(QUERY_FIND_ALL_PROJECTS)
             .bind(("created_by", created_by))
             .await
             .map_err(|err| {

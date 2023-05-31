@@ -1,21 +1,52 @@
 services:
   surreal:
     container_name: agora-surreal
-    image: docker.io/surrealdb/surrealdb:nightly
+    image: docker.io/surrealdb/surrealdb:1.0.0-beta.9-20230402
     restart: on-failure
-    ports:
-      - 5432:5432
     volumes:
       - dbdata:/data/surreal
     security_opt:
       label: disable
-    environment:
-      - BIND=${SURREAL_BIND}
-      - DB_PATH=${SURREAL_DB_PATH}
-      - USER=${SURREAL_USER}
-      - PASS=${SURREAL_PASS}
-      - LOG=${SURREAL_LOG}
+    env_file:
+      - .env
     command: ["start"]
+
+  rabbitmq:
+    container_name: agora-rabbitmq
+    image: docker.io/rabbitmq:3.10.2-alpine
+    hostname: agora-rabbitmq
+    restart: always
+    security_opt:
+      label: disable
+
+  grpc:
+    container_name: agora-grpc
+    image: localhost/alvidir/agora:latest-grpc
+    restart: always
+    volumes:
+      - ./templates:/etc/agora/smtp/templates:ro
+    security_opt:
+      label: disable
+    depends_on:
+      - surreal
+      - rabbitmq
+    env_file:
+      - .env
+    environment:
+      - SERVICE_PORT=8000
+
+  envoy:
+    container_name: filebrowser-envoy
+    image: docker.io/envoyproxy/envoy-alpine:v1.21-latest
+    restart: always
+    volumes:
+      - ./envoy:/etc/envoy:ro
+    security_opt:
+      label: disable
+    depends_on:
+      - filebrowser
+    command: /usr/local/bin/envoy --log-level debug -c /etc/envoy/envoy.yaml
+
 
 volumes:
   dbdata:

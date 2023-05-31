@@ -2,13 +2,21 @@ syntax = "proto3";
 
 package project;
 
-message ProjectDescriptor {
+message Project {
     string id = 1;
     string name = 2;
     string description = 3;
 }
 
-service Project {
-    rpc Create(ProjectDescriptor) returns (ProjectDescriptor);
-    rpc Update(ProjectDescriptor) returns (ProjectDescriptor);
+message ProjectList {
+    repeated Project projects = 1;
+}
+
+message Empty {}
+
+service ProjectService {
+    rpc Get(Project) returns (Project);
+    rpc List(Empty) returns (ProjectList);
+    rpc Create(Project) returns (Project);
+    rpc Update(Project) returns (Project);
 }

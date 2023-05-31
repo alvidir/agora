@@ -1,8 +1,7 @@
 //! gRPC utilities for managing request's headers and conversions.
 
-use tonic::{Request, Status};
-
 use crate::result::Error;
+use tonic::{Request, Status};
 
 impl From<Error> for Status {
     fn from(value: Error) -> Self {

@@ -1,2 +1,2 @@
-pub mod bus;
-pub mod handler;
+pub mod event_bus;
+pub mod event_handler;
