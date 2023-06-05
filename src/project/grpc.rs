@@ -19,6 +19,8 @@ pub use proto::project_service_server::ProjectServiceServer;
 // Proto message structs
 use proto::{Empty, Project, ProjectList};
 
+use self::proto::Cardinality;
+
 use super::application::{CreateOptions, EventBus};
 
 pub struct GrpcProjectServer<P: ProjectRepository + Sync + Send, B: EventBus + Sync + Send> {
@@ -87,6 +89,8 @@ impl From<domain::Project> for Project {
             id: value.id,
             name: value.name,
             description: value.description,
+            highlight: value.highlight,
+            cardinalities: value.cardinalities.map(Into::into).unwrap_or_default(),
         }
     }
 }
@@ -100,8 +104,46 @@ impl From<Vec<domain::Project>> for ProjectList {
                     id: project.id,
                     name: project.name,
                     description: project.description,
+                    highlight: project.highlight,
+                    cardinalities: project.cardinalities.map(Into::into).unwrap_or_default(),
                 })
                 .collect(),
         }
+    }
+}
+
+// TODO: use a macro for implenting the From trait
+impl From<domain::Cardinalities> for Vec<Cardinality> {
+    fn from(value: domain::Cardinalities) -> Self {
+        let mut cardinalities = vec![];
+        if value.total_characters > 0 {
+            cardinalities.push(Cardinality {
+                name: "characters".to_string(),
+                value: value.total_characters,
+            })
+        }
+
+        if value.total_objects > 0 {
+            cardinalities.push(Cardinality {
+                name: "objects".to_string(),
+                value: value.total_objects,
+            })
+        }
+
+        if value.total_locations > 0 {
+            cardinalities.push(Cardinality {
+                name: "locations".to_string(),
+                value: value.total_locations,
+            })
+        }
+
+        if value.total_events > 0 {
+            cardinalities.push(Cardinality {
+                name: "events".to_string(),
+                value: value.total_events,
+            })
+        }
+
+        cardinalities
     }
 }

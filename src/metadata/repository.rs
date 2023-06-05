@@ -5,7 +5,7 @@ use std::{borrow::Cow, time::SystemTime};
 
 use super::domain::Metadata;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct SurrealMetadata<'a> {
     pub(super) created_by: Option<Cow<'a, str>>,
     pub(super) created_at: Option<Cow<'a, SystemTime>>,

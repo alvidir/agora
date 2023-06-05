@@ -2,7 +2,7 @@
 
 use std::time::SystemTime;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Metadata {
     pub(super) created_by: Option<String>,
     pub(super) created_at: Option<SystemTime>,

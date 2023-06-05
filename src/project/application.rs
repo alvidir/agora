@@ -20,6 +20,7 @@ pub trait EventBus {
 pub struct CreateOptions {
     pub description: Option<String>,
     pub reference: Option<String>,
+    pub highlight: bool,
 }
 
 pub struct ProjectApplication<P: ProjectRepository, B: EventBus> {
@@ -52,6 +53,8 @@ impl<P: ProjectRepository, B: EventBus> ProjectApplication<P, B> {
             name: name.to_string(),
             description: options.description.unwrap_or_default(),
             reference: options.reference,
+            highlight: options.highlight,
+            cardinalities: None,
             meta,
         };
 

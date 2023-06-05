@@ -2,13 +2,23 @@
 
 use crate::metadata::domain::Metadata;
 
+/// Represents all the cardinalities a project could have
+pub struct Cardinalities {
+    pub(super) total_characters: i32,
+    pub(super) total_objects: i32,
+    pub(super) total_locations: i32,
+    pub(super) total_events: i32,
+}
+
 /// Represents an agora's project
 pub struct Project {
     pub(super) id: String,
     pub(super) name: String,
     pub(super) description: String,
     pub(super) reference: Option<String>,
+    pub(super) highlight: bool,
     pub(super) meta: Metadata,
+    pub(super) cardinalities: Option<Cardinalities>,
 }
 
 impl Project {
