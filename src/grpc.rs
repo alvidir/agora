@@ -1,8 +1,7 @@
-//! gRPC utilities for managing request's headers.
-
-use tonic::{Request, Status};
+//! gRPC utilities for managing request's headers and conversions.
 
 use crate::result::Error;
+use tonic::{Request, Status};
 
 impl From<Error> for Status {
     fn from(value: Error) -> Self {
@@ -17,6 +16,7 @@ impl From<Error> for Status {
             Error::WrongCredentials => Status::unauthenticated(value),
             Error::RegexNotMatch => Status::failed_precondition(value),
             Error::AlreadyExists => Status::already_exists(value),
+            Error::MissingFields => Status::invalid_argument(value),
         }
     }
 }
@@ -27,7 +27,7 @@ pub fn get_header<T>(req: &Request<T>, header: &str) -> Result<String, Status> {
     let data = req
         .metadata()
         .get(header)
-        .ok_or_else(|| Status::aborted(Error::NotFound))
+        .ok_or_else(|| Into::<Status>::into(Error::Unauthorized))
         .map(|data| data.to_str())?;
 
     data.map(|data| data.to_string()).map_err(|err| {
@@ -36,6 +36,6 @@ pub fn get_header<T>(req: &Request<T>, header: &str) -> Result<String, Status> {
             Error::InvalidHeader,
             err
         );
-        Status::aborted(Error::InvalidHeader)
+        Error::InvalidHeader.into()
     })
 }

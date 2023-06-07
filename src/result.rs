@@ -1,13 +1,10 @@
 //! Custom result and common errors thrown by the application.
 
-use surrealdb::error;
-use tonic::Status;
-
 /// Result represents a custom result where error is of the [`Error`] type.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// StdResult is an alias for [`std::result::Result`] where error impl the [`std::error::Error`] trait.
-pub type StdResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub type _StdResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// Error represent an error thrown by the application
 #[derive(strum_macros::Display, Debug, PartialEq)]
@@ -32,6 +29,8 @@ pub enum Error {
     RegexNotMatch,
     #[strum(serialize = "E010")]
     AlreadyExists,
+    #[strum(serialize = "E011")]
+    MissingFields,
 }
 
 impl From<Error> for String {
