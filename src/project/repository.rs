@@ -16,11 +16,11 @@ const TABLENAME: &str = "project";
 const QUERY_FIND_PROJECT: &str =
     "SELECT * FROM project WHERE id = $id AND meta.created_by = $created_by;";
 
-const QUERY_FIND_ALL_PROJECTS_WITH_CARDINALITIES: &str = "SELECT * 
-    count(project.characters) AS total_characters,
-    count(project.objects) AS total_objects,
-    count(project.locations) AS total_locations,
-    count(project.events) AS total_events
+const QUERY_FIND_ALL_PROJECTS_WITH_CARDINALITIES: &str = "SELECT *,
+count(project.characters) AS total_characters,
+count(project.objects) AS total_objects,
+count(project.locations) AS total_locations,
+count(project.events) AS total_events
 FROM project
 WHERE meta.created_by = $created_by;";
 
@@ -69,7 +69,7 @@ struct SurrealProjectWithCardinalities<'a> {
     description: Cow<'a, str>,
     reference: Option<Cow<'a, str>>,
     highlight: bool,
-    meta: Cow<'a, SurrealMetadata<'a>>,
+    meta: SurrealMetadata<'a>,
     #[serde(skip_serializing)]
     total_characters: i32,
     #[serde(skip_serializing)]
@@ -89,7 +89,7 @@ impl<'a> From<SurrealProjectWithCardinalities<'a>> for ProjectWithCardinalities 
                 description: value.description.into(),
                 reference: value.reference.map(Into::into),
                 highlight: value.highlight,
-                meta: value.meta.into_owned().into(),
+                meta: value.meta.into(),
             },
 
             cardinalities: Cardinalities {
