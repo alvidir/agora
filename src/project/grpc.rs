@@ -17,10 +17,9 @@ use proto::project_service_server::ProjectService;
 pub use proto::project_service_server::ProjectServiceServer;
 
 // Proto message structs
-use proto::{Empty, Project, ProjectList};
+use proto::{Empty, Project, ProjectList, ProjectWithCardinalities};
 
 use self::proto::Cardinality;
-
 use super::application::{CreateOptions, EventBus};
 
 pub struct GrpcProjectServer<P: ProjectRepository + Sync + Send, B: EventBus + Sync + Send> {
@@ -90,24 +89,23 @@ impl From<domain::Project> for Project {
             name: value.name,
             description: value.description,
             highlight: value.highlight,
-            cardinalities: value.cardinalities.map(Into::into).unwrap_or_default(),
         }
     }
 }
 
-impl From<Vec<domain::Project>> for ProjectList {
-    fn from(value: Vec<domain::Project>) -> Self {
+impl From<domain::ProjectWithCardinalities> for ProjectWithCardinalities {
+    fn from(value: domain::ProjectWithCardinalities) -> Self {
         Self {
-            projects: value
-                .into_iter()
-                .map(|project| Project {
-                    id: project.id,
-                    name: project.name,
-                    description: project.description,
-                    highlight: project.highlight,
-                    cardinalities: project.cardinalities.map(Into::into).unwrap_or_default(),
-                })
-                .collect(),
+            project: Some(value.project.into()),
+            cardinalities: value.cardinalities.into(),
+        }
+    }
+}
+
+impl From<Vec<domain::ProjectWithCardinalities>> for ProjectList {
+    fn from(value: Vec<domain::ProjectWithCardinalities>) -> Self {
+        Self {
+            projects: value.into_iter().map(Into::into).collect(),
         }
     }
 }

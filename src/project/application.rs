@@ -1,13 +1,13 @@
 //! Application layer of the project entity.
 
-use super::domain::Project;
+use super::domain::{Project, ProjectWithCardinalities};
 use crate::{metadata::domain::Metadata, result::Result};
 use std::sync::Arc;
 
 #[async_trait::async_trait]
 pub trait ProjectRepository {
     async fn find(&self, id: &str, created_by: &str) -> Result<Project>;
-    async fn find_all(&self, created_by: &str) -> Result<Vec<Project>>;
+    async fn find_all(&self, created_by: &str) -> Result<Vec<ProjectWithCardinalities>>;
     async fn create(&self, project: &mut Project) -> Result<()>;
     async fn update(&self, project: &Project) -> Result<()>;
 }
@@ -34,7 +34,7 @@ impl<P: ProjectRepository, B: EventBus> ProjectApplication<P, B> {
         self.project_repo.find(id, created_by).await
     }
 
-    pub async fn list(&self, uid: &str) -> Result<Vec<Project>> {
+    pub async fn list(&self, uid: &str) -> Result<Vec<ProjectWithCardinalities>> {
         info!("processing a \"list\" projects request for user {} ", uid);
         self.project_repo.find_all(uid).await
     }
@@ -54,7 +54,6 @@ impl<P: ProjectRepository, B: EventBus> ProjectApplication<P, B> {
             description: options.description.unwrap_or_default(),
             reference: options.reference,
             highlight: options.highlight,
-            cardinalities: None,
             meta,
         };
 
