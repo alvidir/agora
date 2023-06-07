@@ -36,15 +36,18 @@ services:
       - SERVICE_PORT=8000
 
   envoy:
-    container_name: filebrowser-envoy
+    container_name: agora-envoy
     image: docker.io/envoyproxy/envoy-alpine:v1.21-latest
     restart: always
+    ports:
+      - 8080:8080
+      - 9901:9901
     volumes:
       - ./envoy:/etc/envoy:ro
     security_opt:
       label: disable
     depends_on:
-      - filebrowser
+      - grpc
     command: /usr/local/bin/envoy --log-level debug -c /etc/envoy/envoy.yaml
 
 
