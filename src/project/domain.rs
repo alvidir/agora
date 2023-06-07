@@ -2,15 +2,7 @@
 
 use crate::metadata::domain::Metadata;
 
-/// Represents all the cardinalities a project could have
-pub struct Cardinalities {
-    pub(super) total_characters: i32,
-    pub(super) total_objects: i32,
-    pub(super) total_locations: i32,
-    pub(super) total_events: i32,
-}
-
-/// Represents an agora's project
+/// Represents a project
 pub struct Project {
     pub(super) id: String,
     pub(super) name: String,
@@ -18,7 +10,6 @@ pub struct Project {
     pub(super) reference: Option<String>,
     pub(super) highlight: bool,
     pub(super) meta: Metadata,
-    pub(super) cardinalities: Option<Cardinalities>,
 }
 
 impl Project {
@@ -41,4 +32,18 @@ impl Project {
     pub fn meta(&self) -> &Metadata {
         &self.meta
     }
+}
+
+/// Represents all the cardinalities a project could have
+pub struct Cardinalities {
+    pub(super) total_characters: i32,
+    pub(super) total_objects: i32,
+    pub(super) total_locations: i32,
+    pub(super) total_events: i32,
+}
+
+/// Represents a [`Project`] and all its [`Cardinalities`]
+pub struct ProjectWithCardinalities {
+    pub project: Project,
+    pub cardinalities: Cardinalities,
 }

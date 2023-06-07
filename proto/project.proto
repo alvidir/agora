@@ -2,21 +2,25 @@ syntax = "proto3";
 
 package project;
 
-message Cardinality {
-    string name = 1;
-    int32 value = 2;
-}
-
 message Project {
     string id = 1;
     string name = 2;
     string description = 3;
     bool highlight = 4;
-    repeated Cardinality cardinalities = 5;
+}
+
+message Cardinality {
+    string name = 1;
+    int32 value = 2;
+}
+
+message ProjectWithCardinalities {
+    Project project = 1;
+    repeated Cardinality cardinalities = 2;
 }
 
 message ProjectList {
-    repeated Project projects = 1;
+    repeated ProjectWithCardinalities projects = 1;
 }
 
 message Empty {}
