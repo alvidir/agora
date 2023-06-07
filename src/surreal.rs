@@ -12,16 +12,44 @@ impl From<error::Db> for Error {
     }
 }
 
-/// Given a query response and a field name the value of that field if, and only if, it exists
-/// in the response. Otherwise an error is thrown.
-pub fn export_field<T: DeserializeOwned>(resp: &mut Response, field: &str) -> Result<T> {
-    let Some(value): Option<T> = resp.take(field).map_err(|err| {
-        error!("{} getting {} from query result: {}", Error::Unknown, field, err);
-        Error::Unknown
-    })? else {
-        error!("{} getting {} from query result: no value provided", Error::Unknown, field);
-        return Err(Error::Unknown);
-    };
+/// Given a query response and an statement's index, returns the content of that statement deserialized
+/// into an instance of U.
+pub fn export_item<T: DeserializeOwned, U: From<T>>(mut resp: Response, index: usize) -> Result<U> {
+    resp.take::<Option<T>>(index)
+        .map_err(|err| {
+            error!(
+                "{} taking item from statement {}: {}",
+                Error::Unknown,
+                index,
+                err
+            );
 
-    Ok(value)
+            Error::Unknown
+        })?
+        .map(Into::into)
+        .ok_or(Error::NotFound)
+}
+
+/// Given a query response and an statement's index, returns the content of that statement deserialized
+/// into an instance of U.
+pub fn export_items<T: DeserializeOwned, U: From<T>>(
+    mut resp: Response,
+    index: usize,
+) -> Result<Vec<U>> {
+    let items = resp.take::<Vec<T>>(index).map_err(|err| {
+        error!(
+            "{} taking item from statement {}: {}",
+            Error::Unknown,
+            index,
+            err
+        );
+
+        Error::Unknown
+    })?;
+
+    if items.is_empty() {
+        return Err(Error::NotFound);
+    }
+
+    Ok(items.into_iter().map(Into::into).collect::<Vec<U>>())
 }

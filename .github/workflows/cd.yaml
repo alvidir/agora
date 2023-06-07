@@ -11,8 +11,8 @@ env:
   IMAGE_NAME: alvidir/agora
 
 jobs:
-  push_to_registry:
-    name: Push image to registry
+  push_grpc_server_to_registry:
+    name: Push gRPC server image
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build image
         id: build-image
-        uses: redhat-actions/buildah-build@v2.10
+        uses: redhat-actions/buildah-build@v2.12
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: latest ${{ github.event.release.tag_name }}
