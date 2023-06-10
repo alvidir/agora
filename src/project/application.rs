@@ -18,7 +18,7 @@ pub trait EventBus {
 
 #[derive(Default, Clone)]
 pub struct CreateOptions {
-    pub description: Option<String>,
+    pub description: String,
     pub reference: Option<String>,
     pub highlight: bool,
 }
@@ -51,7 +51,7 @@ impl<P: ProjectRepository, B: EventBus> ProjectApplication<P, B> {
         let mut project = Project {
             id: "".to_string(),
             name: name.to_string(),
-            description: options.description.unwrap_or_default(),
+            description: options.description,
             reference: options.reference,
             highlight: options.highlight,
             meta,

@@ -61,7 +61,8 @@ impl<P: 'static + ProjectRepository + Sync + Send, B: 'static + EventBus + Sync 
                 &msg_ref.name,
                 &uid,
                 CreateOptions {
-                    description: Some(msg_ref.description.to_string()),
+                    description: msg_ref.description.to_string(),
+                    highlight: msg_ref.highlight,
                     ..Default::default()
                 },
             )

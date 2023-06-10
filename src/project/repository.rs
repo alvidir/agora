@@ -9,40 +9,40 @@ use crate::result::{Error, Result};
 use crate::surreal;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use surrealdb::{engine::remote::ws::Client, Surreal};
+use surrealdb::{engine::remote::ws::Client, sql::Thing, Surreal};
 
 const TABLENAME: &str = "project";
 
 const QUERY_FIND_PROJECT: &str =
     "SELECT * FROM project WHERE id = $id AND meta.created_by = $created_by;";
 
-const QUERY_FIND_ALL_PROJECTS_WITH_CARDINALITIES: &str = "SELECT * 
-    count(project.characters) AS total_characters,
-    count(project.objects) AS total_objects,
-    count(project.locations) AS total_locations,
-    count(project.events) AS total_events
+const QUERY_FIND_ALL_PROJECTS_WITH_CARDINALITIES: &str = "SELECT *,
+count(project.characters) AS total_characters,
+count(project.objects) AS total_objects,
+count(project.locations) AS total_locations,
+count(project.events) AS total_events
 FROM project
 WHERE meta.created_by = $created_by;";
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug)]
 struct SurrealProject<'a> {
-    id: Cow<'a, str>,
+    id: Thing,
     name: Cow<'a, str>,
     description: Cow<'a, str>,
     reference: Option<Cow<'a, str>>,
-    highlight: bool,
     meta: Cow<'a, SurrealMetadata<'a>>,
+    highlight: bool,
 }
 
 impl<'a> From<SurrealProject<'a>> for Project {
     fn from(value: SurrealProject<'a>) -> Self {
         Project {
-            id: value.id.into(),
+            id: value.id.to_string(),
             name: value.name.into(),
             description: value.description.into(),
             reference: value.reference.map(Into::into),
-            highlight: value.highlight,
             meta: value.meta.into_owned().into(),
+            highlight: value.highlight,
         }
     }
 }
@@ -52,24 +52,25 @@ impl<'a> From<&Project> for SurrealProject<'a> {
         let metadata: SurrealMetadata<'a> = value.meta.clone().into();
 
         SurrealProject {
-            id: value.id.clone().into(),
+            id: Thing::from(value.id().as_bytes().to_vec()),
             name: value.name.clone().into(),
             description: value.description.clone().into(),
-            reference: value.reference().map(ToString::to_string).map(Into::into),
-            highlight: value.highlight,
+            reference: value.reference.clone().map(Into::into),
             meta: Cow::Owned(metadata),
+            highlight: value.highlight,
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug)]
 struct SurrealProjectWithCardinalities<'a> {
-    id: Cow<'a, str>,
+    id: Thing,
     name: Cow<'a, str>,
     description: Cow<'a, str>,
     reference: Option<Cow<'a, str>>,
+    meta: SurrealMetadata<'a>,
     highlight: bool,
-    meta: Cow<'a, SurrealMetadata<'a>>,
+
     #[serde(skip_serializing)]
     total_characters: i32,
     #[serde(skip_serializing)]
@@ -84,12 +85,12 @@ impl<'a> From<SurrealProjectWithCardinalities<'a>> for ProjectWithCardinalities 
     fn from(value: SurrealProjectWithCardinalities<'a>) -> Self {
         Self {
             project: Project {
-                id: value.id.into(),
+                id: value.id.to_string(),
                 name: value.name.into(),
                 description: value.description.into(),
                 reference: value.reference.map(Into::into),
                 highlight: value.highlight,
-                meta: value.meta.into_owned().into(),
+                meta: value.meta.into(),
             },
 
             cardinalities: Cardinalities {
@@ -105,16 +106,20 @@ impl<'a> From<SurrealProjectWithCardinalities<'a>> for ProjectWithCardinalities 
 #[derive(Serialize, Deserialize)]
 struct SurrealAnonymousProject<'a> {
     name: Cow<'a, str>,
+    description: Cow<'a, str>,
     reference: Option<Cow<'a, str>>,
     meta: SurrealMetadata<'a>,
+    highlight: bool,
 }
 
 impl<'a> From<&Project> for SurrealAnonymousProject<'a> {
     fn from(value: &Project) -> Self {
         SurrealAnonymousProject {
             name: value.name.clone().into(),
-            reference: value.reference().map(ToString::to_string).map(Into::into),
+            description: value.description.clone().into(),
+            reference: value.reference.clone().map(Into::into),
             meta: value.meta.clone().into(),
+            highlight: value.highlight,
         }
     }
 }
@@ -174,7 +179,7 @@ impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
     }
 
     async fn create(&self, project: &mut Project) -> Result<()> {
-        let resp: SurrealProject = self
+        let created: SurrealProject = self
             .client
             .create(TABLENAME)
             .content(Into::<SurrealAnonymousProject>::into(&*project))
@@ -188,7 +193,7 @@ impl<'a> ProjectRepository for SurrealProjectRepository<'a> {
                 Error::Unknown
             })?;
 
-        project.id = resp.id.into();
+        project.id = created.id.to_string();
         Ok(())
     }
 

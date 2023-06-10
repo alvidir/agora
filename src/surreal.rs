@@ -47,9 +47,5 @@ pub fn export_items<T: DeserializeOwned, U: From<T>>(
         Error::Unknown
     })?;
 
-    if items.is_empty() {
-        return Err(Error::NotFound);
-    }
-
     Ok(items.into_iter().map(Into::into).collect::<Vec<U>>())
 }
