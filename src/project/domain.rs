@@ -3,6 +3,7 @@
 use crate::metadata::domain::Metadata;
 
 /// Represents a project
+#[derive(Debug)]
 pub struct Project {
     pub(super) id: String,
     pub(super) name: String,
@@ -35,6 +36,7 @@ impl Project {
 }
 
 /// Represents all the cardinalities a project could have
+#[derive(Debug)]
 pub struct Cardinalities {
     pub(super) total_characters: i32,
     pub(super) total_objects: i32,
@@ -43,6 +45,7 @@ pub struct Cardinalities {
 }
 
 /// Represents a [`Project`] and all its [`Cardinalities`]
+#[derive(Debug)]
 pub struct ProjectWithCardinalities {
     pub project: Project,
     pub cardinalities: Cardinalities,

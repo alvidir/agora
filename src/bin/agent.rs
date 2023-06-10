@@ -9,7 +9,9 @@ use agora::project::application::ProjectApplication;
 use agora::project::repository::SurrealProjectRepository;
 use agora::rabbitmq::RabbitMqEventBus;
 use async_once::AsyncOnce;
-use lapin::{Channel, Connection, ConnectionProperties};
+use lapin::options::ExchangeDeclareOptions;
+use lapin::types::FieldTable;
+use lapin::{Channel, Connection, ConnectionProperties, ExchangeKind};
 use std::env;
 use std::error::Error;
 use std::sync::Arc;
@@ -65,6 +67,8 @@ lazy_static! {
         info!("connection with surreal cluster established");
         client
     });
+    static ref RABBITMQ_FILES_EXCHANGE: String =
+        env::var(ENV_RABBITMQ_FILES_EXCHANGE).expect("rabbitmq files exchange must be set");
     static ref RABBITMQ_CONN: AsyncOnce<Channel> = AsyncOnce::new(async {
         let rabbitmq_dsn = env::var(ENV_RABBITMQ_DSN).expect("rabbitmq url must be set");
         let conn = Connection::connect(&rabbitmq_dsn, ConnectionProperties::default())
@@ -76,13 +80,38 @@ lazy_static! {
             .map_err(|err| format!("establishing connection with {}: {}", rabbitmq_dsn, err))
             .unwrap();
 
-        conn.create_channel()
+        let channel = conn
+            .create_channel()
             .await
             .map_err(|err| format!("creating rabbitmq channel: {}", err))
-            .unwrap()
+            .unwrap();
+
+        let exchange_options = ExchangeDeclareOptions {
+            durable: true,
+            auto_delete: false,
+            internal: false,
+            nowait: false,
+            passive: false,
+        };
+
+        channel
+            .exchange_declare(
+                &RABBITMQ_FILES_EXCHANGE,
+                ExchangeKind::Fanout,
+                exchange_options,
+                FieldTable::default(),
+            )
+            .await
+            .map_err(|err| {
+                format!(
+                    "creating rabbitmq exchange {}: {}",
+                    &*RABBITMQ_FILES_EXCHANGE, err
+                )
+            })
+            .unwrap();
+
+        channel
     });
-    static ref RABBITMQ_FILES_EXCHANGE: String =
-        env::var(ENV_RABBITMQ_FILES_EXCHANGE).expect("rabbitmq files exchange must be set");
     static ref RABBITMQ_FILES_QUEUE: String =
         env::var(ENV_RABBITMQ_FILES_QUEUE).expect("rabbitmq files queue must be set");
     static ref EVENT_ISSUER: String = env::var(ENV_EVENT_ISSUER).expect("event issuer must be set");

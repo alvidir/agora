@@ -39,9 +39,6 @@ services:
     container_name: agora-envoy
     image: docker.io/envoyproxy/envoy-alpine:v1.21-latest
     restart: always
-    ports:
-      - 8080:8080
-      - 9901:9901
     volumes:
       - ./envoy:/etc/envoy:ro
     security_opt:
@@ -50,6 +47,19 @@ services:
       - grpc
     command: /usr/local/bin/envoy --log-level debug -c /etc/envoy/envoy.yaml
 
+  nginx:
+    container_name: agora-nginx
+    image: docker.io/nginx:1.23.2-alpine
+    restart: always
+    ports:
+      - 8080:80
+      - 8443:443
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+    security_opt:
+        label: disable
+    depends_on:
+      - envoy
 
 volumes:
   dbdata:
