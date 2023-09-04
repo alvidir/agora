@@ -24,7 +24,7 @@ surrealdb = { git = "http://github.com/surrealdb/surrealdb", tag = "v1.0.0-beta.
 strum = "0.25.0"   
 strum_macros = "0.25.0"
 tokio = { version = "1.28.2", features = ["rt", "rt-multi-thread", "macros"] }
-tonic = { version = "0.9.2", optional = true }
+tonic = { version = "0.10.0", optional = true }
 
 [build-dependencies]
 tonic-build = "0.9.2"
